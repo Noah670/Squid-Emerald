@@ -1,0 +1,2657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Squid Emerald</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;touch-action:none;font-family:Georgia,serif;}
+#wrap{position:relative;width:100%;height:100%;}
+canvas{display:block;width:100%;height:100%;}
+#hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;padding:10px 14px;pointer-events:none;z-index:20;gap:6px;}
+.hp{background:rgba(0,0,0,.7);border:2px solid rgba(255,255,180,.3);border-radius:22px;padding:5px 14px;color:#ffe;font:bold 14px Georgia,serif;letter-spacing:1px;text-shadow:0 1px 6px #000;white-space:nowrap;}
+#hcombo{position:absolute;top:58px;right:14px;font:bold 22px Georgia,serif;color:#ffe000;text-shadow:0 0 14px #fa0,0 2px 4px #000;pointer-events:none;z-index:21;opacity:0;transition:opacity .3s;}
+#hpopup{position:absolute;top:38%;left:50%;transform:translate(-50%,-50%);font:bold 34px Georgia,serif;color:#fff;text-shadow:0 0 20px #0ff,0 2px 6px #000;pointer-events:none;z-index:22;opacity:0;text-align:center;}
+#overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:30;color:#fff;text-align:center;padding:20px;background:rgba(0,0,0,.92);}
+#overlay h1{font:bold 52px Georgia,serif;margin-bottom:4px;letter-spacing:2px;}
+.sub{font-size:17px;margin-bottom:14px;font-style:italic;}
+.hints{font-size:13px;color:#bbb;line-height:2.2;}
+.btns{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;justify-content:center;}
+.btn{padding:11px 22px;font:bold 14px Georgia,serif;border:none;border-radius:28px;cursor:pointer;letter-spacing:.5px;transition:transform .12s,box-shadow .12s;}
+.btn:active,.btn:hover{transform:scale(1.08);}
+.bsv{background:linear-gradient(135deg,#00eeff,#0088bb,#00ddcc);color:#001a22;box-shadow:0 4px 24px rgba(0,220,255,.7);}
+.bfo{background:linear-gradient(135deg,#00ff99,#009955,#44ffcc);color:#001a11;box-shadow:0 4px 24px rgba(0,255,150,.65);}
+.bgh{background:linear-gradient(135deg,#44cc33,#228822,#66ee44);color:#fff;box-shadow:0 4px 28px rgba(80,255,60,.7);}
+.bgh:hover{box-shadow:0 6px 36px rgba(80,255,60,1);}
+.bgf{background:linear-gradient(135deg,#00ff88,#00cc44,#aaff00);color:#001800;box-shadow:0 4px 28px rgba(0,255,100,.85);}
+.bgf:hover{box-shadow:0 6px 36px rgba(0,255,80,1);}
+#fhud{position:absolute;top:0;left:0;right:0;display:none;justify-content:space-around;align-items:flex-start;padding:8px 10px;z-index:20;pointer-events:none;gap:5px;flex-wrap:wrap;}
+.fh{background:rgba(0,0,0,.78);border:2px solid rgba(0,255,120,.45);border-radius:20px;padding:4px 12px;color:#88ff88;font:bold 13px Georgia,serif;letter-spacing:1px;text-shadow:0 1px 5px #000;white-space:nowrap;}
+#mc{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-end;padding:10px 16px 20px;pointer-events:none;z-index:25;}
+.cg{display:flex;gap:8px;align-items:flex-end;}
+.cb{width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.15);border:2.5px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;font-size:22px;pointer-events:all;user-select:none;box-shadow:0 3px 12px rgba(0,0,0,.5);}
+.cb:active{background:rgba(255,255,255,.42);}
+.cb.jb{width:70px;height:70px;background:rgba(0,220,255,.22);border-color:rgba(0,220,255,.7);font-size:28px;}
+.cb.rb{width:50px;height:50px;background:rgba(255,200,80,.22);border-color:rgba(255,200,80,.6);font-size:18px;}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="c"></canvas>
+  <div id="hud">
+    <div class="hp" id="hl">💜 3</div>
+    <div class="hp" id="hv">SQUID EMERALD</div>
+    <div class="hp" id="hs">⭐ 0</div>
+  </div>
+  <div id="fhud">
+    <div class="fh" id="fhd">📏 0m</div>
+    <div class="fh" id="fhs">⭐ 0</div>
+    <div class="fh" id="fhe">💎 0</div>
+    <div class="fh" id="fhx" style="color:#ffe000">✕1</div>
+    <div class="fh" id="fhb">🏆 0</div>
+  </div>
+  <div id="hcombo"></div>
+  <div id="hpopup"></div>
+  <div id="overlay">
+    <div style="font-size:64px;margin-bottom:6px;filter:drop-shadow(0 0 18px #0f8)">🦑</div>
+    <h1 style="text-shadow:0 0 30px #0f8,0 2px 8px #060;color:#cfe;">Squid Emerald</h1>
+    <div class="sub" style="color:#8fa;">Choose your world!</div>
+    <div style="display:flex;gap:8px;margin:8px 0 12px;flex-wrap:wrap;justify-content:center;font-size:11.5px;line-height:1.6;">
+      <span style="background:rgba(0,220,255,.14);border:1px solid #00eeff;border-radius:12px;padding:5px 11px;color:#00ffee;text-align:left;">
+        🌴 <b>CYAN PALM</b><br>
+        <span style="color:#aaffff;font-weight:normal;">Slopes · Split routes · Secret cave</span>
+      </span>
+      <span style="background:rgba(0,255,150,.10);border:1px solid #44ffaa;border-radius:12px;padding:5px 11px;color:#44ffaa;text-align:left;">
+        🌿 <b>EMERALD FOREST</b><br>
+        <span style="color:#aaffee;font-weight:normal;">Vines · Hidden passages · Vertical routes</span>
+      </span>
+      <span style="background:rgba(100,255,80,.10);border:1px solid #66ee44;border-radius:12px;padding:5px 11px;color:#66ee44;text-align:left;">
+        🌿 <b>GREEN HILL ZONE</b><br>
+        <span style="color:#aaffaa;font-weight:normal;">Rolling meadows · Waterfalls · Brown soil · Speed chains</span>
+      </span>
+      <span style="background:rgba(0,255,100,.14);border:2px solid #00ff88;border-radius:12px;padding:5px 11px;color:#00ff88;text-align:left;">
+        ♾️ <b>GREEN HILL FOREVER</b> <span style="font-size:10px;color:#aaff44">ENDLESS</span><br>
+        <span style="color:#88ffaa;font-weight:normal;">10 terrain types · Emerald hunt · Sonic 2 parallax · Score attack</span>
+      </span>
+    </div>
+    <div class="hints">
+      ➡️ Run &nbsp;|&nbsp; Space/↑ Jump (Double Jump!) &nbsp;|&nbsp; ↓ Spin Dash <span style="color:#00ffee">(kills enemies!)</span><br>
+      🌿 Jump near a <b style="color:#44ffaa">Vine</b> to swing (Emerald Forest) &nbsp;|&nbsp; ♾️ Endless mode: survive &amp; score!<br>
+      <span style="color:#ffe000;">Stomp &amp; Dash chain COMBO bonuses! 🌟</span>
+    </div>
+    <div class="btns">
+      <button class="btn bsv" onclick="startGame(0)">🌴 Cyan Palm Circuit</button>
+      <button class="btn bfo" onclick="startGame(1)">🌿 Emerald Forest</button>
+      <button class="btn bgh" onclick="startGame(2)">🌿 Green Hill Zone</button>
+      <button class="btn bgf" onclick="startGame(3)">♾️ Green Hill Forever</button>
+    </div>
+  </div>
+  <div id="mc">
+    <div class="cg">
+      <div class="cb" ontouchstart="T('l',1)" ontouchend="T('l',0)" ontouchcancel="T('l',0)">◀</div>
+      <div class="cb" ontouchstart="T('r',1)" ontouchend="T('r',0)" ontouchcancel="T('r',0)">▶</div>
+    </div>
+    <div class="cg">
+      <div class="cb rb" ontouchstart="T('d',1)" ontouchend="T('d',0)" ontouchcancel="T('d',0)">🌊</div>
+      <div class="cb jb" ontouchstart="T('j',1)" ontouchend="T('j',0)" ontouchcancel="T('j',0)">🔼</div>
+    </div>
+  </div>
+</div>
+<script>
+// ═══════════════════════════════════════════════════════════
+//  SQUID SAFARI — Future Edition
+// ═══════════════════════════════════════════════════════════
+var canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+var W=1,H=1;
+function resize(){W=canvas.width=canvas.offsetWidth>0?canvas.offsetWidth:window.innerWidth;H=canvas.height=canvas.offsetHeight>0?canvas.offsetHeight:window.innerHeight;}
+window.addEventListener('resize',function(){resize();if(G.state==='playing')rebuildLevel();});
+resize();
+
+var keys={},touch={};
+window.addEventListener('keydown',function(e){keys[e.code]=true;['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].forEach(function(k){if(e.code===k)e.preventDefault();});});
+window.addEventListener('keyup',function(e){keys[e.code]=false;});
+function T(k,v){touch[k]=!!v;}
+function goL(){return!!(keys.ArrowLeft||keys.KeyA||touch.l);}
+function goR(){return!!(keys.ArrowRight||keys.KeyD||touch.r);}
+function goJ(){return!!(keys.Space||keys.ArrowUp||keys.KeyW||touch.j);}
+function goD(){return!!(keys.ArrowDown||keys.KeyS||touch.d);}
+
+var GV=0.62,LW=8000;
+// Endless mode state — lives in G.ef
+var EF={chunks:[],spawnX:0,dist:0,emeralds:0,best:0,spd:1,pal:0,dead:false};
+var G={state:'menu',lvl:0,score:0,lives:3,frame:0,sx:0,
+  plats:[],enemies:[],coins:[],parts:[],mills:[],clouds:[],
+  vines:[],fogs:[],
+  player:null,inv:0,jHeld:false,rHeld:false,
+  combo:0,comboTimer:0,totalScore:0,
+  vine:null,
+  tut:{},secrets:[],ef:EF};
+
+// ── Popup ─────────────────────────────────────────────────
+var popT=0;
+function popup(txt,col){var e=document.getElementById('hpopup');e.innerHTML=txt;e.style.color=col||'#fff';e.style.opacity='1';popT=100;}
+function tickPopup(){if(popT>0){popT--;if(popT<30)document.getElementById('hpopup').style.opacity=(popT/30).toFixed(2);}}
+
+// ── Util ──────────────────────────────────────────────────
+function rnd(a,b){return a+Math.random()*(b-a);}
+function clamp(v,lo,hi){return v<lo?lo:v>hi?hi:v;}
+function hit(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;}
+function resolve(e,p){
+  var oy=Math.min(e.y+e.h,p.y+p.h)-Math.max(e.y,p.y);
+  var ox=Math.min(e.x+e.w,p.x+p.w)-Math.max(e.x,p.x);
+  if(oy<ox){if(e.y<p.y){e.y-=oy;e.vy=0;return'top';}else{e.y+=oy;e.vy=0;return'bot';}}
+  else{if(e.x<p.x)e.x-=ox;else e.x+=ox;e.vx*=-0.1;return'side';}
+}
+function plat(x,yf,w,hf,col,col2,top,goal){
+  return{x:x,y:H*yf,w:w,h:Math.max(20,H*hf),col:col,col2:col2,top:top,goal:!!goal,type:'s'};
+}
+function mplat(x,yf,w,axis,mn,mx,spd,col,col2,top){
+  var minn=axis==='v'?H*mn:mn,maxx=axis==='v'?H*mx:mx;
+  return{x:x,y:H*yf,w:w,h:20,col:col,col2:col2,top:top,goal:false,type:'m',axis:axis,min:minn,max:maxx,dir:1,spd:spd};
+}
+// slope platform: simulated slope as a series of steps
+function slopePlats(x0,y0f,x1,y1f,steps,w,col,col2,top){
+  var arr=[];
+  for(var i=0;i<steps;i++){
+    var t=i/steps,t2=(i+1)/steps;
+    var px=x0+t*(x1-x0),py=y0f+t*(y1f-y0f);
+    var pw=Math.ceil((x1-x0)/steps)+2;
+    arr.push({x:Math.round(px),y:H*py,w:pw,h:Math.max(22,H*.12),col:col,col2:col2,top:top,goal:false,type:'s'});
+  }
+  return arr;
+}
+function mkE(x,yf,kind){
+  var spds={rhino:-2.2,owl:-0.9,boar:-1.5,bug:-1.2,crab:-1.0,wasp:-0.8,orb:-0.6};
+  return{x:x,y:H*yf-42,w:42,h:42,vx:spds[kind]||-1.2,vy:0,onG:false,kind:kind,sx:x,alive:true,af:0,at:0,pr:220,fr:false,hy:H*yf-42};
+}
+function mkC(x,y){return{x:x,y:y,bob:Math.random()*6.28,col:false,ring:false,star:false,gem:false};}
+function mkStar(x,y){var c=mkC(x,y);c.star=true;return c;}
+function mkGem(x,y){var c=mkC(x,y);c.gem=true;return c;}
+// Vine: pendulum anchor at (ax,ay) with arm length len
+function mkVine(ax,ay,len,col){return{ax:ax,ay:ay,len:len,col:col||'#00ffcc',ang:-.4,vel:0};}
+// Secret marker: triggers a popup on first touch
+function mkSecret(x,yf,msg,col){return{x:x,y:H*yf,w:28,h:28,msg:msg,col:col||'#ffff88',found:false};}
+
+// ═══════════════════════════════════════════════════════════
+//  LEVEL 0 — CYAN PALM CIRCUIT
+//  Mechanics: Intro downhill · Basic rails · Split route · Secret cave
+// ═══════════════════════════════════════════════════════════
+function buildSavannah(){
+  var C='#0077aa',C2='#002233',T='#00ffee';
+  var F='#0099bb',F2='#003344',FT='#aaffff';
+  var R='#cceeff',R2='#0066aa';
+
+  G.plats=[];G.vines=[];G.fogs=[];G.secrets=[];G.tut={};
+
+  // ── INTRO DOWNHILL (teaches momentum) ───────────────────────
+  G.plats.push(plat(0,.78,180,.04,C,C2,T));          // start pad
+  pushSlope(G.plats,180,.78,620,.90,18,C,C2,T);       // BIG intro downhill
+  G.plats.push(plat(620,.90,220,.12,C,C2,T));         // flat landing
+
+  // ── FIRST ENEMY CLUSTER for spin-dash tutorial ───────────────
+  G.plats.push(plat(840,.90,380,.12,F,F2,FT));        // enemy arena floor
+  // (enemies placed in enemy section below at x≈900,1000,1100)
+
+  // ── FIRST UPHILL ─────────────────────────────────────────────
+  pushSlope(G.plats,1220,.90,1640,.77,22,C,C2,T);
+  G.plats.push(plat(1640,.77,300,.22,F,F2,FT));
+
+  // ── SPLIT ROUTE FORK ─────────────────────────────────────────
+  // LOW ROAD: continues at ground level
+  pushSlope(G.plats,1940,.77,2280,.90,18,C,C2,T);
+  G.plats.push(plat(2280,.90,500,.12,C,C2,T));
+  pushSlope(G.plats,2780,.90,3060,.75,16,F,F2,FT);
+  G.plats.push(plat(3060,.75,280,.25,F,F2,FT));
+
+  // HIGH ROAD: sky islands (reachable by double-jump from the fork)
+  G.plats.push(plat(1860,.62,110,.04,R,R2,T));
+  G.plats.push(plat(2040,.56,120,.04,F,F2,FT));
+  G.plats.push(plat(2230,.50,140,.04,R,R2,T));   // peak — gem here
+  G.plats.push(plat(2460,.55,110,.04,F,F2,FT));
+  G.plats.push(plat(2670,.62,120,.04,R,R2,T));
+  G.plats.push(plat(2900,.58,100,.04,F,F2,FT));
+  G.plats.push(plat(3080,.63,110,.04,R,R2,T));
+
+  // ── CHROME RAMP + LOOP ───────────────────────────────────────
+  pushSlope(G.plats,3340,.75,3800,.67,24,R,R2,T);
+  G.plats.push(plat(3800,.67,240,.32,R,R2,T));
+  pushSlope(G.plats,4040,.67,4280,.84,14,R,R2,FT);
+
+  // ── SECRET CAVE AREA ─────────────────────────────────────────
+  // Drop through a gap between 4280 and 4440 into a lower cave
+  G.plats.push(plat(4280,.84,120,.04,C,C2,T));         // cave mouth lip
+  G.plats.push(plat(4280,.95,380,.06,C,C2,'#003344')); // cave floor (below normal view)
+  G.plats.push(plat(4340,.91,260,.05,F,F2,'#004455')); // cave inner shelf
+  G.plats.push(plat(4660,.84,140,.04,C,C2,T));         // cave exit ramp
+  // secret gems in cave placed in collectibles section
+
+  // ── VALLEY + TWIN HILLS ──────────────────────────────────────
+  G.plats.push(plat(4440,.90,440,.12,C,C2,T));
+  pushSlope(G.plats,4880,.90,5200,.74,18,C,C2,T);
+  G.plats.push(plat(5200,.74,200,.26,F,F2,FT));
+  pushSlope(G.plats,5400,.74,5560,.85,8,F,F2,FT);
+  G.plats.push(plat(5560,.85,120,.14,C,C2,T));
+  pushSlope(G.plats,5680,.85,5880,.73,10,C,C2,T);
+  G.plats.push(plat(5880,.73,200,.27,F,F2,FT));
+
+  // ── FINAL SPRINT + GOAL ──────────────────────────────────────
+  pushSlope(G.plats,6080,.73,6360,.90,16,C,C2,T);
+  G.plats.push(plat(6360,.90,300,.12,C,C2,T));
+  pushSlope(G.plats,6660,.90,7200,.68,28,C,C2,T);
+  G.plats.push(plat(7200,.68,320,.32,R,R2,T));
+  G.plats.push(plat(7570,.68,260,.32,F,F2,FT,true)); // GOAL
+
+  // Extended aerial path
+  G.plats.push(plat(4100,.58,120,.04,F,F2,FT));
+  G.plats.push(plat(4600,.53,110,.04,R,R2,T));
+  G.plats.push(plat(5450,.55,130,.04,F,F2,FT));
+  G.plats.push(plat(5700,.49,110,.04,R,R2,T));
+  G.plats.push(plat(5960,.55,120,.04,F,F2,FT));
+  G.plats.push(plat(6900,.60,120,.04,R,R2,T));
+  G.plats.push(plat(7200,.54,120,.04,F,F2,FT));
+
+  // Moving platforms
+  G.plats.push(mplat(1800,.74,120,'h',1800,2060,2.0,R,R2,T));
+  G.plats.push(mplat(3200,.62,110,'h',3100,3360,1.8,F,F2,FT));
+  G.plats.push(mplat(4400,.72,110,'v',.62,.87,1.6,R,R2,T));
+  G.plats.push(mplat(5300,.62,110,'h',5220,5500,2.2,F,F2,FT));
+  G.plats.push(mplat(6800,.58,100,'v',.48,.72,1.9,R,R2,T));
+
+
+  // ── ENEMIES ──────────────────────────────────────────────────
+  G.enemies=[
+    // SPIN-DASH TUTORIAL CLUSTER (3 in a row — perfect for intro dash)
+    mkE(900,.89,'crab'), mkE(1000,.89,'bug'), mkE(1100,.89,'crab'),
+    // After first hill
+    mkE(1380,.76,'wasp'),mkE(1560,.76,'bug'),
+    // Low road valley
+    mkE(2340,.89,'crab'),mkE(2560,.89,'bug'),mkE(2720,.89,'wasp'),
+    // High road aerial
+    mkE(2040,.55,'wasp'),mkE(2670,.61,'wasp'),
+    // Ramp approach
+    mkE(3140,.74,'bug'),mkE(3360,.74,'crab'),
+    // Post-ramp + cave area
+    mkE(4060,.83,'wasp'),mkE(4480,.89,'bug'),mkE(4620,.89,'crab'),
+    // Valley + hills
+    mkE(4940,.89,'bug'),mkE(5100,.89,'wasp'),mkE(5250,.73,'crab'),
+    mkE(5460,.72,'bug'),mkE(5720,.72,'wasp'),
+    // Final sprint
+    mkE(6420,.89,'crab'),mkE(6620,.89,'bug'),mkE(6820,.89,'wasp'),
+    mkE(7000,.85,'crab'),mkE(7100,.80,'bug'),mkE(7260,.67,'wasp'),
+    // Aerial enemies
+    mkE(3080,.62,'wasp'),mkE(4600,.52,'wasp'),mkE(5700,.48,'wasp'),mkE(7200,.53,'wasp')
+  ];
+
+  // ── COLLECTIBLES ─────────────────────────────────────────────
+  G.coins=[];G.secrets=[];
+  // Arc helpers: [startX, yFrac, count, spacing]
+  var arcs=[
+    // INTRO DOWNHILL — coins guide the slope
+    [80,.76,4,36],[200,.80,4,38],[340,.83,4,40],[480,.87,5,36],
+    // arena floor
+    [660,.87,6,36],[860,.87,4,36],
+    // uphill
+    [1250,.87,4,40],[1360,.84,4,40],[1480,.81,4,40],[1580,.76,4,36],
+    // low road
+    [1960,.87,6,36],[2140,.87,6,36],[2340,.87,6,36],[2560,.87,5,36],
+    [2820,.87,4,40],[2940,.82,4,40],[3020,.78,4,40],
+    // high road bonus arc
+    [1900,.60,3,44],[2100,.53,3,44],[2280,.48,3,44],[2500,.53,3,44],[2720,.60,3,44],
+    // chrome ramp
+    [3400,.72,4,40],[3520,.70,4,40],[3640,.68,4,40],[3760,.67,5,36],
+    // cave
+    [4310,.93,4,30],[4380,.90,4,30],[4460,.93,4,30],
+    // valley + hills
+    [4500,.87,8,36],[4720,.87,6,36],[4940,.87,5,36],
+    [5010,.87,4,40],[5080,.83,4,40],[5150,.79,4,40],
+    [5250,.73,5,36],[5420,.72,5,36],
+    [5620,.82,4,40],[5720,.80,4,40],
+    [5940,.72,5,36],[6120,.72,4,36],
+    // final sprint
+    [6400,.87,6,36],[6620,.87,5,36],[6820,.85,4,40],
+    [6960,.81,4,40],[7100,.77,4,40],[7240,.72,5,36],[7420,.66,6,36]
+  ];
+  for(var i=0;i<arcs.length;i++){
+    var a=arcs[i];
+    for(var j=0;j<a[2];j++){
+      var bx=a[0]+j*a[3],by=H*a[1]-Math.sin(j/(Math.max(1,a[2]-1))*3.14)*24;
+      G.coins.push(mkC(bx,by));
+    }
+  }
+  // Rings — gate-style challenges
+  var rp=[[480,.70],[1620,.70],[2230,.46],[3800,.65],[4350,.88],[5200,.72],[6700,.79],[7400,.65]];
+  rp.forEach(function(r){var c=mkC(r[0],H*r[1]);c.ring=true;G.coins.push(c);});
+  // Stars (secret)
+  var sp=[[2230,.46],[4370,.90],[4450,.90],[1300,.47],[5700,.46],[7200,.51]];
+  sp.forEach(function(s){G.coins.push(mkStar(s[0],H*s[1]));});
+  // Gems
+  var gp=[[720,.52],[1090,.51],[1860,.60],[2040,.53],[2900,.56],[4310,.90],[4380,.90],[5450,.53],[5960,.53],[7000,.58]];
+  gp.forEach(function(g){G.coins.push(mkGem(g[0],H*g[1]));});
+
+  // Secrets — trigger zone markers
+  G.secrets.push(mkSecret(4300,.83,'🕳️ SECRET CAVE! Explore below!','#ffff88'));
+  G.secrets.push(mkSecret(1900,.60,'⬆️ HIGH ROAD! Skill route!','#aaffff'));
+
+  G.clouds=[];
+  for(var i=0;i<44;i++)
+    G.clouds.push({x:i*200+rnd(-20,20),y:rnd(10,H*.50),w:rnd(55,195),h:rnd(20,72),spd:rnd(.05,.20),a:rnd(.3,.72),layer:i%3});
+}
+
+// ═══════════════════════════════════════════════════════════
+//  LEVEL 1 — EMERALD FOREST
+//  Mechanics: Vine grabs · Tree rail grinds · Hidden passage · Vertical route
+// ═══════════════════════════════════════════════════════════
+function buildForest(){
+  var C='#006633',C2='#001a0a',T='#44ffaa';
+  var F='#008844',F2='#002a14',FT='#00ffcc';
+  var V='#004455',V2='#001122',VT='#88ffee';
+
+  G.plats=[];G.vines=[];G.fogs=[];G.secrets=[];G.tut={};
+
+  // ── OPENING GROVE ─────────────────────────────────────────
+  G.plats.push(plat(0,.88,580,.12,C,C2,T));
+  pushSlope(G.plats,580,.88,1040,.76,22,C,C2,T);
+  G.plats.push(plat(1040,.76,300,.22,F,F2,FT));
+
+  // ── VINE SECTION (teaches grabbing) ──────────────────────
+  // Gap zone: 1340–1680. Player must use vines to cross safely.
+  pushSlope(G.plats,1340,.76,1580,.90,16,C,C2,T);
+  G.plats.push(plat(1580,.90,100,.12,C,C2,T)); // small ledge before gap
+  // mid-gap tiny platform
+  G.plats.push(plat(1820,.84,80,.04,V,V2,VT));
+  // far side landing after vine swing
+  G.plats.push(plat(2000,.90,480,.12,F,F2,FT));
+
+  // ── CRYSTAL ARCH RAIL SECTION ────────────────────────────
+  pushSlope(G.plats,2480,.90,2800,.70,24,V,V2,VT);
+  G.plats.push(plat(2800,.70,280,.30,F,F2,FT));
+  pushSlope(G.plats,3080,.70,3280,.84,16,C,C2,T);
+  G.plats.push(plat(3280,.84,100,.04,C,C2,T));
+
+  // ── THE GREAT TREE PLATEAU ───────────────────────────────
+  pushSlope(G.plats,3380,.84,3640,.68,20,F,F2,FT);
+  G.plats.push(plat(3640,.68,400,.32,F,F2,FT));  // wide canopy plateau
+
+  // ── ROOT DESCENT — HIDDEN PASSAGE ENTRANCE ───────────────
+  // Passage: wall of "foliage" (dense lower platforms) — run through at speed
+  G.plats.push(plat(4040,.72,160,.04,C,C2,T));
+  G.plats.push(plat(4260,.78,140,.04,V,V2,VT));
+  G.plats.push(plat(4460,.84,120,.04,C,C2,T));
+  // HIDDEN passage floor (behind foliage — jump down to reveal)
+  G.plats.push(plat(4040,.94,540,.06,V,V2,'#003322'));  // dark passage floor
+  G.plats.push(plat(4100,.90,420,.05,F,F2,'#004433'));  // inner passage shelf
+  // passage exit ramp
+  G.plats.push(plat(4580,.84,160,.04,C,C2,T));
+
+  // ── MISTY VALLEY ─────────────────────────────────────────
+  G.plats.push(plat(4740,.90,360,.12,C,C2,T));
+  pushSlope(G.plats,5100,.90,5380,.74,18,V,V2,VT);
+  G.plats.push(plat(5380,.74,280,.26,V,V2,VT));
+  pushSlope(G.plats,5660,.74,5880,.88,12,C,C2,T);
+  G.plats.push(plat(5880,.88,440,.12,C,C2,T));
+
+  // ── VERTICAL ROUTE OPTION ────────────────────────────────
+  // After the valley — player can go LEFT (ground) or climb UP (vertical chain)
+  G.plats.push(plat(5880,.70,100,.04,F,F2,FT));
+  G.plats.push(plat(5920,.58,90,.04,V,V2,VT));
+  G.plats.push(plat(5960,.46,90,.04,F,F2,FT));
+  G.plats.push(plat(6000,.34,100,.04,V,V2,VT));  // very high — big gem reward
+
+  // ── FINAL CRYSTAL CLIMB + GOAL ───────────────────────────
+  pushSlope(G.plats,6320,.88,6800,.64,30,V,V2,VT);
+  G.plats.push(plat(6800,.64,360,.36,F,F2,FT));
+  pushSlope(G.plats,7160,.64,7380,.74,14,C,C2,T);
+  G.plats.push(plat(7380,.68,320,.32,F,F2,FT));
+  G.plats.push(plat(7740,.68,260,.32,V,V2,VT,true)); // GOAL
+
+  // Aerial vine-path chain
+  G.plats.push(plat(620,.64,120,.04,V,V2,VT));
+  G.plats.push(plat(820,.57,110,.04,F,F2,FT));
+  G.plats.push(plat(1040,.50,130,.04,V,V2,VT));
+  G.plats.push(plat(2560,.56,120,.04,F,F2,FT));
+  G.plats.push(plat(2800,.50,110,.04,V,V2,VT));
+  G.plats.push(plat(3680,.62,110,.04,F,F2,FT));
+  G.plats.push(plat(4800,.66,120,.04,V,V2,VT));
+  G.plats.push(plat(5140,.70,110,.04,F,F2,FT));
+  G.plats.push(plat(5640,.55,120,.04,V,V2,VT));
+  G.plats.push(plat(5880,.48,110,.04,F,F2,FT));
+  G.plats.push(plat(6200,.54,120,.04,V,V2,VT));
+  G.plats.push(plat(6600,.48,120,.04,F,F2,FT));
+
+  // Moving platforms
+  G.plats.push(mplat(1700,.74,120,'h',1700,1980,1.8,V,V2,VT));
+  G.plats.push(mplat(2440,.60,110,'h',2340,2620,1.6,F,F2,FT));
+  G.plats.push(mplat(3700,.68,110,'v',.57,.83,1.4,V,V2,VT));
+  G.plats.push(mplat(5440,.68,110,'h',5340,5640,1.9,F,F2,FT));
+  G.plats.push(mplat(6000,.40,90,'v',.28,.50,2.0,V,V2,'#44ffcc'));
+
+
+  // ── VINES (grab & swing across gaps) ─────────────────────
+  // Positioned over the vine-gap zone at x≈1680–2000
+  G.vines.push(mkVine(1700,H*.52,140,'#00ffcc'));
+  G.vines.push(mkVine(1840,H*.48,150,'#44ffaa'));
+  G.vines.push(mkVine(1970,H*.52,135,'#00ffcc'));
+  // Mid-level vines
+  G.vines.push(mkVine(3100,H*.44,120,'#00ffee'));
+  G.vines.push(mkVine(4900,H*.46,125,'#44ffaa'));
+  G.vines.push(mkVine(5200,H*.42,130,'#00ffcc'));
+  // Final section vines
+  G.vines.push(mkVine(6100,H*.44,120,'#00ffcc'));
+  G.vines.push(mkVine(6450,H*.40,130,'#44ffaa'));
+
+  // ── FOG PARTICLES ────────────────────────────────────────
+  G.fogs=[];
+  for(var f=0;f<70;f++)
+    G.fogs.push({x:rnd(0,LW),y:rnd(H*.25,H*.78),r:rnd(22,90),a:rnd(.02,.08),spd:rnd(.15,.6),ph:rnd(0,6.28)});
+
+  // ── ENEMIES ──────────────────────────────────────────────
+  G.enemies=[
+    // Opening grove
+    mkE(280,.87,'bug'),  mkE(520,.87,'crab'),
+    // Uphill
+    mkE(760,.75,'wasp'), mkE(960,.75,'bug'),
+    // Before vine gap
+    mkE(1360,.87,'crab'),
+    // Far side of gap
+    mkE(2060,.89,'bug'), mkE(2240,.89,'crab'), mkE(2380,.89,'wasp'),
+    // Arch climb
+    mkE(2560,.69,'bug'), mkE(2720,.69,'wasp'),
+    // Great tree plateau
+    mkE(3700,.67,'crab'),mkE(3880,.67,'bug'), mkE(4000,.67,'wasp'),
+    // Hidden passage
+    mkE(4160,.93,'crab'),mkE(4360,.93,'bug'),
+    // Valley
+    mkE(4780,.89,'wasp'),mkE(4960,.89,'crab'),mkE(5100,.73,'bug'),
+    // Vertical route defenders
+    mkE(5900,.69,'wasp'),mkE(5960,.57,'wasp'),
+    // Final climb
+    mkE(6380,.87,'bug'), mkE(6540,.83,'wasp'),mkE(6700,.79,'crab'),
+    mkE(6860,.75,'bug'), mkE(7040,.71,'wasp'),mkE(7200,.67,'crab'),
+    // Aerial
+    mkE(820,.56,'wasp'), mkE(2560,.55,'wasp'),mkE(5640,.54,'wasp'),mkE(6200,.53,'wasp')
+  ];
+
+  // ── COLLECTIBLES ─────────────────────────────────────────
+  G.coins=[];
+  var arcs=[
+    [100,.85,6,36],[320,.85,5,36],
+    [600,.84,4,40],[730,.80,4,40],[870,.77,4,40],
+    [1080,.74,6,36],[1200,.74,5,36],
+    [1360,.87,4,36],[1500,.87,3,36],
+    // vine gap - coins reward a successful swing
+    [1680,.80,3,44],[1820,.75,3,44],[2000,.87,4,36],
+    [2100,.87,6,36],[2300,.87,5,36],[2440,.87,4,36],
+    [2540,.87,4,40],[2620,.83,4,40],[2720,.79,4,40],
+    [2860,.68,6,36],[2980,.68,5,36],
+    [3100,.80,4,40],[3200,.77,4,40],
+    [3440,.82,4,40],[3540,.76,4,40],[3640,.70,5,36],
+    [3760,.66,7,36],[3920,.66,6,36],[4000,.66,5,36],
+    // hidden passage coins — reward exploration
+    [4160,.92,4,30],[4260,.89,4,30],[4360,.92,4,30],[4460,.92,4,30],
+    [4620,.87,5,36],[4800,.87,6,36],[4960,.87,5,36],
+    [5120,.87,4,40],[5220,.83,4,40],[5320,.79,4,40],
+    [5440,.73,5,36],[5580,.73,4,36],
+    [5660,.84,4,40],[5780,.87,5,36],[5920,.87,6,36],
+    // vertical route
+    [5940,.67,3,28],[5980,.55,3,28],[6020,.43,3,28],[6060,.31,3,28],
+    // final climb
+    [6380,.85,4,40],[6480,.82,4,40],[6580,.78,4,40],
+    [6700,.74,4,40],[6820,.70,4,40],[6940,.67,5,36],
+    [7020,.62,6,36],[7180,.62,5,36],[7380,.66,6,36],[7560,.66,6,36]
+  ];
+  for(var i=0;i<arcs.length;i++){
+    var a=arcs[i];
+    for(var j=0;j<a[2];j++){
+      var bx=a[0]+j*a[3],by=H*a[1]-Math.sin(j/(Math.max(1,a[2]-1))*3.14)*26;
+      G.coins.push(mkC(bx,by));
+    }
+  }
+  var rp=[[480,.68],[1040,.48],[1840,.72],[2800,.48],[3680,.60],[4900,.64],[5640,.53],[6100,.52],[7100,.54]];
+  rp.forEach(function(r){var c=mkC(r[0],H*r[1]);c.ring=true;G.coins.push(c);});
+  var sp=[[1040,.46],[2800,.48],[4180,.88],[4300,.88],[5960,.44],[6000,.32],[6600,.46],[7740,.55]];
+  sp.forEach(function(s){G.coins.push(mkStar(s[0],H*s[1]));});
+  var gp=[[620,.62],[820,.55],[2560,.54],[3680,.60],[4160,.88],[4360,.88],[5640,.53],[5880,.46],[6200,.52],[6600,.46],[7200,.50],[7560,.60]];
+  gp.forEach(function(g){G.coins.push(mkGem(g[0],H*g[1]));});
+
+  // Secrets
+  G.secrets.push(mkSecret(4040,.83,'🌳 HIDDEN PASSAGE! Drop down!','#88ffcc'));
+  G.secrets.push(mkSecret(5880,.67,'⬆️ VERTICAL ROUTE! Climb for gems!','#44ffaa'));
+  G.secrets.push(mkSecret(1660,.84,'🌿 GRAB THE VINES to cross!','#00ffcc'));
+
+  G.clouds=[];
+  for(var i=0;i<44;i++)
+    G.clouds.push({x:i*195+rnd(-20,20),y:rnd(10,H*.55),w:rnd(55,195),h:rnd(22,78),spd:rnd(.03,.16),a:rnd(.28,.68),layer:i%3});
+}
+
+// ═══════════════════════════════════════════════════════════
+//  LEVEL 2 — GREEN HILL FUTURE
+//  Mechanics: Large hills · Long speed chains · Open terrain · Advanced routes
+// ═══════════════════════════════════════════════════════════
+function buildGreenHill(){
+  var C='#228833',C2='#3a1a08',T='#66dd44';
+  var F='#2a9940',F2='#4a2210',FT='#88ee55';
+  var SL='#1a7730',SL2='#301808';
+
+  G.plats=[];G.vines=[];G.fogs=[];G.secrets=[];G.tut={};
+
+  // ── OPENING VALLEY — wide flat build-up ─────────────────
+  G.plats.push(plat(0,.90,760,.12,C,C2,T));
+  // BIG HILL 1 — sweeping long rise-fall rhythm
+  pushSlope(G.plats,760,.90,1280,.74,24,C,C2,T);
+  G.plats.push(plat(1280,.74,200,.26,F,F2,FT));
+  pushSlope(G.plats,1480,.74,2000,.90,24,F,F2,FT);
+  G.plats.push(plat(2000,.90,320,.12,C,C2,T));
+
+  // ── BIG HILL 2 — steeper, faster ────────────────────────
+  pushSlope(G.plats,2320,.90,2720,.68,20,C,C2,T);
+  G.plats.push(plat(2720,.68,280,.32,F,F2,FT));
+  pushSlope(G.plats,3000,.68,3340,.90,18,F,F2,FT);
+  G.plats.push(plat(3340,.90,260,.12,C,C2,T));
+
+  // ── STEPPED DESCENT (momentum rhythm) ────────────────────
+  G.plats.push(plat(3600,.77,180,.04,F,F2,FT));
+  G.plats.push(plat(3840,.82,160,.04,C,C2,T));
+  G.plats.push(plat(4060,.87,140,.04,F,F2,FT));
+
+  // ── VALLEY 3 + TWIN PEAKS ────────────────────────────────
+  G.plats.push(plat(4260,.90,300,.12,C,C2,T));
+  pushSlope(G.plats,4560,.90,4820,.74,14,C,C2,T);
+  G.plats.push(plat(4820,.74,200,.26,F,F2,FT));
+  pushSlope(G.plats,5020,.74,5180,.87,8,F,F2,FT);
+  G.plats.push(plat(5180,.87,80,.12,C,C2,T));
+  pushSlope(G.plats,5260,.87,5460,.73,10,C,C2,T);
+  G.plats.push(plat(5460,.73,220,.27,F,F2,FT));
+
+  // ── LONG SPEED CHAIN — wide open valley floor ────────────
+  pushSlope(G.plats,5680,.73,5900,.90,12,F,F2,FT);
+  G.plats.push(plat(5900,.90,600,.12,C,C2,T));         // LONG flat sprint
+
+  // ── BIG FINALE CLIMB ─────────────────────────────────────
+  pushSlope(G.plats,6500,.90,7100,.64,32,C,C2,T);       // 32-step mega hill
+  G.plats.push(plat(7100,.64,380,.36,F,F2,FT));
+  G.plats.push(plat(7540,.64,280,.36,C,C2,T,true));     // GOAL
+
+  // ── ADVANCED UPPER ROUTE ─────────────────────────────────
+  G.plats.push(plat(700,.62,120,.04,F,F2,FT));
+  G.plats.push(plat(900,.55,110,.04,C,C2,T));
+  G.plats.push(plat(1100,.48,130,.04,F,F2,FT));
+  G.plats.push(plat(1340,.42,140,.04,C,C2,T));   // extreme height — stars
+  G.plats.push(plat(1580,.48,110,.04,F,F2,FT));
+  G.plats.push(plat(1820,.54,120,.04,C,C2,T));
+  G.plats.push(plat(2500,.56,130,.04,F,F2,FT));
+  G.plats.push(plat(2760,.50,110,.04,C,C2,T));
+  G.plats.push(plat(3440,.56,120,.04,F,F2,FT));
+  G.plats.push(plat(4000,.60,110,.04,C,C2,T));
+  G.plats.push(plat(4560,.54,130,.04,F,F2,FT));
+  G.plats.push(plat(4820,.48,110,.04,C,C2,T));
+  G.plats.push(plat(5200,.54,130,.04,F,F2,FT));
+  G.plats.push(plat(5600,.48,120,.04,C,C2,T));
+  G.plats.push(plat(5900,.42,120,.04,F,F2,FT));   // sky summit — big rewards
+  G.plats.push(plat(6200,.48,120,.04,C,C2,T));
+  G.plats.push(plat(6600,.54,120,.04,F,F2,FT));
+
+  // Moving platforms
+  G.plats.push(mplat(1740,.76,120,'h',1740,2020,1.9,F,F2,FT));
+  G.plats.push(mplat(2400,.64,110,'h',2300,2580,1.6,C,C2,T));
+  G.plats.push(mplat(3540,.68,110,'v',.58,.84,1.4,F,F2,FT));
+  G.plats.push(mplat(4160,.66,110,'h',4060,4320,2.0,C,C2,T));
+  G.plats.push(mplat(5100,.68,120,'h',5020,5280,1.8,F,F2,FT));
+  G.plats.push(mplat(5700,.60,100,'v',.48,.72,2.1,C,C2,T));
+  G.plats.push(mplat(760,.53,100,'v',.42,.64,1.7,F,F2,'#00ffff'));
+
+  // ── RAILS (speed chain network) ──────────────────────────
+
+  // ── ENEMIES ──────────────────────────────────────────────
+  G.enemies=[
+    // Opening valley
+    mkE(300,.89,'bug'),  mkE(540,.89,'crab'),
+    // Hill 1 climb
+    mkE(900,.75,'wasp'), mkE(1120,.75,'bug'),
+    // Hill 1 far side
+    mkE(1680,.87,'crab'),mkE(1900,.87,'bug'), mkE(2060,.87,'wasp'),
+    // Hill 2
+    mkE(2460,.67,'bug'), mkE(2600,.67,'wasp'),mkE(2820,.87,'crab'),
+    // Stepped descent
+    mkE(3080,.87,'bug'), mkE(3280,.87,'crab'),mkE(3480,.76,'wasp'),
+    // Valley 3
+    mkE(4380,.89,'crab'),mkE(4580,.73,'bug'), mkE(4800,.73,'wasp'),
+    mkE(5060,.72,'crab'),mkE(5300,.72,'bug'),
+    // Speed chain valley
+    mkE(5960,.89,'crab'),mkE(6100,.89,'bug'), mkE(6260,.89,'wasp'),
+    // Finale climb
+    mkE(6580,.86,'crab'),mkE(6760,.83,'bug'), mkE(6940,.79,'wasp'),
+    mkE(7060,.75,'crab'),mkE(7200,.71,'bug'), mkE(7340,.67,'wasp'),
+    // Aerial upper route
+    mkE(1100,.47,'wasp'),mkE(2760,.49,'wasp'),mkE(4820,.47,'wasp'),mkE(5900,.41,'wasp')
+  ];
+
+  // ── COLLECTIBLES ─────────────────────────────────────────
+  G.coins=[];
+  var arcs=[
+    [80,.87,7,36],[340,.87,6,36],
+    [780,.85,4,40],[920,.82,4,40],[1060,.78,4,40],
+    [1340,.72,7,36],[1480,.72,6,36],
+    [1640,.85,4,40],[1800,.87,5,36],[2060,.87,6,36],
+    [2380,.87,4,40],[2480,.84,4,40],[2580,.79,4,40],
+    [2780,.66,7,36],[2920,.66,6,36],
+    [3060,.79,4,40],[3180,.83,4,40],[3420,.87,5,36],
+    [3660,.87,7,36],[3900,.87,7,36],[4140,.87,6,36],[4360,.87,5,36],
+    [4620,.72,4,40],[4760,.72,5,36],
+    [4880,.79,4,40],[4980,.83,4,40],[5120,.78,4,40],[5240,.73,5,36],
+    [5520,.72,5,36],
+    [5740,.84,4,40],[5900,.87,8,36],[6100,.87,8,36],[6300,.87,6,36],
+    // finale
+    [6560,.86,4,40],[6660,.83,4,40],[6760,.79,4,40],
+    [6860,.75,4,40],[6960,.71,4,40],[7060,.68,5,36],
+    [7160,.62,7,36],[7360,.62,6,36],
+    // upper route
+    [1340,.39,3,44],[2760,.47,3,44],[4820,.44,3,44],[5900,.39,3,44]
+  ];
+  for(var i=0;i<arcs.length;i++){
+    var a=arcs[i];
+    for(var j=0;j<a[2];j++){
+      var bx=a[0]+j*a[3],by=H*a[1]-Math.sin(j/(Math.max(1,a[2]-1))*3.14)*30;
+      G.coins.push(mkC(bx,by));
+    }
+  }
+  var rp=[[500,.68],[900,.60],[1380,.70],[1820,.46],[2760,.46],[3440,.52],[4000,.56],[4560,.50],[5200,.50],[5600,.44],[6200,.44],[7100,.54],[7540,.52]];
+  rp.forEach(function(r){var c=mkC(r[0],H*r[1]);c.ring=true;G.coins.push(c);});
+  var sp=[[1340,.38],[2760,.46],[4820,.44],[5900,.38],[6600,.50],[700,.46],[5200,.50],[7540,.52]];
+  sp.forEach(function(s){G.coins.push(mkStar(s[0],H*s[1]));});
+  var gp=[[700,.58],[900,.51],[1580,.44],[2500,.52],[3440,.52],[4000,.56],[4560,.50],[5200,.50],[5600,.44],[5900,.38],[6200,.44],[7160,.55]];
+  gp.forEach(function(g){G.coins.push(mkGem(g[0],H*g[1]));});
+
+  // Secrets
+  G.secrets.push(mkSecret(1340,.40,'⭐ MASTER ROUTE! Speed runner path!','#ff00cc'));
+  G.secrets.push(mkSecret(5960,.87,'🏁 SPEED CHAIN! Hit every rail!','#00ffff'));
+
+  G.clouds=[];
+  for(var i=0;i<42;i++){
+    G.clouds.push({
+      x:i*220+rnd(-30,30),y:rnd(10,H*.55),
+      w:rnd(60,200),h:rnd(25,80),
+      spd:rnd(.06,.22),a:rnd(.35,.75),layer:i%3
+    });
+  }
+}
+
+// Helper: push a slope as stepped terrain
+function pushSlope(arr,x0,y0f,x1,y1f,steps,col,col2,top){
+  for(var i=0;i<steps;i++){
+    var t=i/steps;
+    var px=x0+t*(x1-x0);
+    var py=y0f+t*(y1f-y0f);
+    var pw=Math.ceil((x1-x0)/steps)+3;
+    arr.push({x:Math.round(px),y:H*py,w:pw,h:Math.max(20,H*.15),col:col,col2:col2,top:top,goal:false,type:'s'});
+  }
+}
+
+function rebuildLevel(){if(G.lvl===0)buildSavannah();else if(G.lvl===1)buildForest();else if(G.lvl===2)buildGreenHill();else buildForever();}
+
+// ── Player ────────────────────────────────────────────────
+function spawnPlayer(){
+  G.player={x:120,y:H*.7,w:36,h:44,vx:0,vy:0,onG:false,jl:2,
+    roll:false,rt:0,fr:true,af:0,at:0,trail:[],tp:0,sy:1,sx2:1};
+}
+
+// ═══════════════════════════════════════════════════════════
+//  UPDATE
+// ═══════════════════════════════════════════════════════════
+function update(){
+  if(G.state!=='playing')return;
+  G.frame++;
+  tickPlats();tickPlayer();tickEnemies();tickCoins();tickParts();tickClouds();tickPopup();
+  tickVines(); tickFog();
+  if(G.comboTimer>0){G.comboTimer--;if(G.comboTimer===0){G.combo=0;document.getElementById('hcombo').style.opacity='0';}}
+  var p=G.player;
+  // Forever mode has its own camera and spawning
+  if(G.lvl===3){
+    tickForever();
+    // Forever tutorial
+    var tut=G.tut;
+    if(!tut.go&&p.x>60){tut.go=1;popup('♾️ GREEN HILL FOREVER — Collect emeralds!','#44ff88');}
+    else if(!tut.dash&&p.x>400){tut.dash=1;popup('🌀 Press ↓ to SPIN DASH through enemies!','#44ffaa');}
+    else if(!tut.tips&&p.x>2000){tut.tips=1;popup('💎 Emeralds are EVERYWHERE — look up!','#00ffcc');}
+  }else{
+    G.sx+=((p.x-W*.35)-G.sx)*.10;
+    G.sx=clamp(G.sx,0,LW-W);
+  }
+  if(G.inv>0)G.inv--;
+  for(var i=0;i<G.plats.length;i++){
+    var pl=G.plats[i];
+    if(pl.goal&&hit(p,{x:pl.x,y:pl.y-4,w:pl.w,h:28})){
+      G.state='win';G.totalScore+=G.score;setTimeout(function(){showOv('win');},500);return;
+    }
+  }
+  // Secret zone triggers
+  if(G.secrets){
+    for(var si=0;si<G.secrets.length;si++){
+      var sec=G.secrets[si];
+      if(!sec.found&&Math.abs(p.x+p.w/2-sec.x)<80&&Math.abs(p.y+p.h/2-sec.y)<80){
+        sec.found=true; popup(sec.msg,sec.col);
+      }
+    }
+  }
+  // Tutorial zone popups
+  var tut=G.tut,px=p.x;
+  if(G.lvl===0){
+    if(!tut.go&&px>40){tut.go=1;popup('➡️ RUN downhill! Press ↓ to SPIN!','#00ffee');}
+    else if(!tut.dash&&px>600){tut.dash=1;popup('🌀 3 enemies ahead — SPIN DASH them!','#aaffff');}
+    else if(!tut.rail&&px>640){tut.rail=1;popup('🛤️ Rail ahead — keep speed to GRIND!','#00ffee');}
+    else if(!tut.split&&px>1600){tut.split=1;popup('✨ Split route — HIGH road has secrets!','#ffff88');}
+    else if(!tut.sprint&&px>6600){tut.sprint=1;popup('💨 FINAL SPRINT! Ride every rail!','#00ffee');}
+  }else if(G.lvl===1){
+    if(!tut.go&&px>40){tut.go=1;popup('🌿 Emerald Forest — jump near vines!','#44ffaa');}
+    else if(!tut.vine&&px>1580){tut.vine=1;popup('🌿 GAP AHEAD — grab a vine to swing!','#00ffcc');}
+    else if(!tut.rail&&px>2400){tut.rail=1;popup('🛤️ Rail through the arch — keep running!','#88ffee');}
+    else if(!tut.hidden&&px>3900){tut.hidden=1;popup('🌳 Drop DOWN for the hidden passage!','#44ffaa');}
+    else if(!tut.vert&&px>5820){tut.vert=1;popup('⬆️ VERTICAL ROUTE — climb for big gems!','#00ffcc');}
+  }else{
+    if(!tut.go&&px>40){tut.go=1;popup('🌿 Green Hill Zone — ride the slopes!','#66ee44');}
+    else if(!tut.chain&&px>2700){tut.chain=1;popup('🔗 SPEED CHAIN — don\'t stop, keep rolling!','#44cc33');}
+    else if(!tut.upper&&px>700){tut.upper=tut.upper||0;if(!tut.upper){tut.upper=1;popup('⬆️ Upper route for advanced players!','#88ff66');}}
+    else if(!tut.finale&&px>6400){tut.finale=1;popup('🏁 BIG FINALE — race to the hilltop!','#44cc33');}
+  }
+  // Soft fall respawn (non-endless levels only — forever handles its own death)
+  if(G.lvl!==3&&p.y>H+100){
+    G.grind=false;G.grindRail=null;G.vine=null;
+    p.y=H*.84;p.vy=0;p.vx*=.3;
+    popup(G.lvl===0?'🌴 Back on circuit!':G.lvl===1?'🌿 Caught by vines!':'🌊 Warped!',
+          G.lvl===0?'#00ffee':G.lvl===1?'#44ffaa':'#00ffcc');
+  }
+}
+
+function tickVines(){
+  if(!G.vines||G.vine!==null)return;
+  for(var i=0;i<G.vines.length;i++){
+    var v=G.vines[i];
+    // gentle passive sway
+    v.ang += Math.sin(G.frame*.016+i*.9)*.0004;
+    v.ang=clamp(v.ang,-.9,.9);
+  }
+}
+
+function tickFog(){
+  if(!G.fogs)return;
+  for(var i=0;i<G.fogs.length;i++){
+    var f=G.fogs[i];
+    f.x += f.spd*(f.dir||1)*.3;
+    if(f.x>LW+200)f.x=-100;
+    if(f.x<-200)f.x=LW+100;
+  }
+}
+
+function tickPlats(){
+  for(var i=0;i<G.plats.length;i++){
+    var p=G.plats[i];if(p.type!=='m')continue;
+    if(p.axis==='h'){p.x+=p.spd*p.dir;if(p.x>p.max||p.x<p.min)p.dir*=-1;}
+    else{p.y+=p.spd*p.dir;if(p.y>p.max||p.y<p.min)p.dir*=-1;}
+  }
+}
+
+function tickPlayer(){
+  var p=G.player;
+
+
+  // ── VINE PHYSICS (lvl 1) ─────────────────────────────────
+  if(G.lvl===1 && G.vine!==null){
+    var vn=G.vines[G.vine];
+    // pendulum
+    vn.vel += -0.009 * Math.sin(vn.ang);
+    vn.ang += vn.vel;
+    vn.vel *= 0.978;
+    p.x = (vn.ax - G.sx) + Math.sin(vn.ang)*vn.len - p.w/2;
+    // keep in world space for collision
+    p.x = p.x + G.sx;  // convert back: p.x is world space
+    p.y = vn.ay + Math.cos(vn.ang)*vn.len - p.h+4;
+    p.vx = vn.vel * vn.len * 3.2;
+    p.vy = 0; p.onG = false;
+    if(G.frame%5===0) spawnFx(p.x+p.w/2,p.y+p.h,'#00ffcc',2,'j');
+    // swing-launch on jump
+    if(goJ()&&!G.jHeld){
+      G.vine=null; vn.vel=0;
+      p.vy=-10; p.vx=clamp(p.vx,-14,14); G.jHeld=true;
+      spawnFx(p.x+p.w/2,p.y,'#44ffaa',10,'j');
+      popup('🌿 VINE LAUNCH!','#44ffaa');
+    }
+    if(goD()&&!G.rHeld){ G.vine=null; vn.vel=0; p.roll=true; p.rt=52; G.rHeld=true; }
+    p.sy+=(1-p.sy)*.24; p.sx2+=(1-p.sx2)*.24; p.tp+=.14;
+    return;
+  }
+
+  // ── NORMAL MOVEMENT ──────────────────────────────────────
+  var spMul=(G.lvl===3)?G.ef.spd:1;
+  var top=(G.lvl===2?8.2:G.lvl===0?7.0:G.lvl===3?9.0:6.8)*spMul; if(p.roll)top=14*spMul;
+  var acc=p.onG?.74:.33;
+  if(goL()){p.vx+=(-top-p.vx)*acc;p.fr=false;}
+  else if(goR()){p.vx+=(top-p.vx)*acc;p.fr=true;}
+  else p.vx*=(p.onG?(p.roll?.88:.68):.90);
+
+  // Spin dash charge
+  if(goD()&&!G.rHeld&&p.onG&&!p.roll){
+    p.roll=true;p.rt=52;G.rHeld=true;
+    var _dc=G.lvl===3?efPalCol(2):G.lvl===2?'#66ee44':G.lvl===1?'#44ffaa':'#00ffee';
+    spawnFx(p.x+p.w/2,p.y+p.h,_dc,14,'d');
+    spawnFx(p.x+p.w/2,p.y+p.h/2,G.lvl===1?'#00ffcc':G.lvl===0?'#aaffff':'#ff00cc',10,'d');
+    popup(G.lvl===0?'🌀 SPIN!':G.lvl===1?'🌿 DASH!':G.lvl===3?'♾️ DASH!':'⚡ ROLL!',_dc);
+  }
+  if(!goD())G.rHeld=false;
+  if(p.roll){p.rt--;var rs=p.onG?14:10;p.vx=p.fr?rs:-rs;if(p.rt<=0)p.roll=false;}
+
+  if(goJ()&&!G.jHeld&&p.jl>0){
+    p.vy=p.jl===2?-14.5:-11;p.jl--;G.jHeld=true;p.sy=.55;p.sx2=1.45;
+    var _jc=G.lvl===2?'#55dd55':G.lvl===1?'#00ffcc':'#aaffff';
+    spawnFx(p.x+p.w/2,p.y+p.h,_jc,8,'j');
+    for(var i=0;i<5;i++)p.trail.push({x:p.x+p.w/2+rnd(-10,10),y:p.y+p.h,lf:18,mf:18,vx:rnd(-1.2,1.2),vy:rnd(.5,2.5),r:5});
+  }
+  if(!goJ())G.jHeld=false;
+
+  p.vy=clamp(p.vy+GV,-22,19);p.x+=p.vx;p.x=clamp(p.x,0,LW-p.w);
+  var wasOnG=p.onG;p.onG=false;p.y+=p.vy;
+  for(var i=0;i<G.plats.length;i++){if(hit(p,G.plats[i])&&resolve(p,G.plats[i])==='top')p.onG=true;}
+
+
+  // ── VINE ENTRY (lvl 1) ───────────────────────────────────
+  if(G.lvl===1 && G.vine===null && !p.onG){
+    for(var vi=0;vi<G.vines.length;vi++){
+      var vn=G.vines[vi];
+      var vtx=vn.ax + Math.sin(vn.ang)*vn.len;
+      var vty=vn.ay + Math.cos(vn.ang)*vn.len;
+      var vdx=p.x+p.w/2-vtx, vdy=p.y+p.h/2-vty;
+      if(Math.sqrt(vdx*vdx+vdy*vdy)<38){
+        G.vine=vi;
+        vn.ang=Math.atan2(p.x+p.w/2-vn.ax, p.y+p.h/2-vn.ay);
+        vn.vel=p.vx*0.008;
+        popup('🌿 GRAB!','#44ffaa');
+        break;
+      }
+    }
+  }
+
+  if(p.onG){p.jl=2;if(!wasOnG){p.sy=.5;p.sx2=1.5;var _lc=G.lvl===2?'#66ee55':G.lvl===1?'#44ffaa':'#00ffee';spawnFx(p.x+p.w/2,p.y+p.h,_lc,5,'l');}}
+
+  p.sy+=(1-p.sy)*.24;p.sx2+=(1-p.sx2)*.24;p.tp+=.14;
+  if(p.roll){
+    p.trail.push({x:p.x+p.w/2,y:p.y+p.h-4,lf:20,mf:20,vx:rnd(-1,1),vy:-.5,r:11});
+    p.trail.push({x:p.x+p.w/2+(p.fr?8:-8),y:p.y+p.h/2,lf:12,mf:12,vx:rnd(-.5,.5),vy:rnd(-1,0),r:6});
+  }
+  p.trail=p.trail.filter(function(t){return --t.lf>0;});
+  // Speed trail at velocity (feels punchy at high speed / during roll)
+  if(Math.abs(p.vx)>8.5||p.roll){
+    var stc=G.lvl===3?efPalCol(2):G.lvl===1?'#00ffcc':'#00ffee';
+    var sr=5+Math.max(0,Math.abs(p.vx)-8.5)*0.8;
+    p.trail.push({x:p.x+p.w*.5-p.vx*.5,y:p.y+p.h*.45,lf:14,mf:14,vx:rnd(-.4,.4),vy:rnd(-.3,.3),r:sr});
+    if(Math.abs(p.vx)>11) p.trail.push({x:p.x+p.w*.5-p.vx*.9,y:p.y+p.h*.6,lf:10,mf:10,vx:rnd(-.3,.3),vy:rnd(-.2,.2),r:sr*.6});
+  }
+  p.at++;if(p.onG&&Math.abs(p.vx)>.5&&p.at%7===0)p.af=(p.af+1)%6;
+
+  // ── ENEMY COLLISION ──────────────────────────────────────
+  for(var i=0;i<G.enemies.length;i++){
+    var e=G.enemies[i];if(!e.alive||!hit(p,e))continue;
+    var stomped=(p.vy>0&&p.y+p.h<e.y+e.h*.62);
+    if(stomped||p.roll){
+      e.alive=false;
+      if(stomped){p.vy=-11;p.sy=.48;p.sx2=1.52;}
+      G.combo++;G.comboTimer=110;
+      var chainM=G.lvl===3?Math.min(3,G.ef.spd):1;
+      var pts=Math.floor((stomped?100:80)*G.combo*chainM);G.score+=pts;
+      var _s0=G.lvl===3?efPalCol(2):G.lvl===2?'#44cc33':G.lvl===1?'#44ffaa':'#00ffee';
+      var _s1=G.lvl===2?'#66ee44':G.lvl===1?'#00ffcc':'#aaffff';
+      spawnFx(e.x+e.w/2,e.y,_s0,14,'b');spawnFx(e.x+e.w/2,e.y,_s1,8,'b');
+      if(p.roll){
+        spawnFx(e.x+e.w/2,e.y+e.h/2,_s0,18,'d');
+        popup(G.combo>=2?'💨 DASH x'+G.combo+'! +'+pts:'💨 DASH! +'+pts,_s0);
+      }else{
+        var _cc=G.lvl===2?'#66ee44':G.lvl===1?'#44ffaa':'#00ffee';
+        var _cv=G.lvl===3?efPalCol(2):_cc;
+        popup(G.combo>=3?'🔥 '+G.combo+'x COMBO! +'+pts:'+'+pts,G.combo>=3?_cv:'#fff');
+      }
+      var cel=document.getElementById('hcombo');
+      if(G.combo>1){cel.textContent=(p.roll?'💨':'🌟')+' x'+G.combo+' COMBO';cel.style.opacity='1';}
+      updateHUD();
+    }else if(G.inv===0)takeDmg();
+  }
+}
+
+function tickEnemies(){
+  for(var i=0;i<G.enemies.length;i++){
+    var e=G.enemies[i];if(!e.alive)continue;
+    var ex=e.x-G.sx;if(ex<-300||ex>W+300)continue;
+    if(e.kind==='owl'||e.kind==='wasp'){
+      e.x+=e.vx;e.y=e.hy+Math.sin(G.frame*(e.kind==='wasp'?.07:.04))*22;
+      if(Math.abs(e.x-e.sx)>e.pr)e.vx*=-1;
+    }else{
+      e.vy=clamp(e.vy+GV,-18,18);e.x+=e.vx;e.y+=e.vy;e.onG=false;
+      for(var j=0;j<G.plats.length;j++){if(hit(e,G.plats[j])&&resolve(e,G.plats[j])==='top')e.onG=true;}
+      if(Math.abs(e.x-e.sx)>e.pr)e.vx*=-1;
+      if(e.onG){var pr2={x:e.x+(e.vx>0?e.w+2:-6),y:e.y+e.h+2,w:4,h:4},sup=false;for(var j=0;j<G.plats.length;j++){if(hit(pr2,G.plats[j])){sup=true;break;}}if(!sup)e.vx*=-1;}
+      if(e.y>H+200){e.y=e.hy;e.vy=0;}// GHZ: enemies respawn on fall
+    }
+    e.fr=e.vx>0;e.at++;if(e.at%8===0)e.af=(e.af+1)%4;
+  }
+}
+
+function tickCoins(){
+  var p=G.player;
+  for(var i=0;i<G.coins.length;i++){
+    var b=G.coins[i];if(b.col)continue;b.bob+=.065;
+    var bx=b.x-G.sx;if(bx<-60||bx>W+60)continue;
+    if(hit(p,{x:b.x-13,y:b.y-13,w:26,h:26})){
+      b.col=true;
+      var pts=b.star?500:b.gem?200:b.ring?100:20;
+      G.score+=pts;
+      var col=b.star?'#fffb00':b.gem?'#00ffcc':b.ring?'#ff88ff':'#ffcc00';
+      spawnFx(b.x,b.y,col,b.star?16:b.gem?12:b.ring?10:5,'r');
+      if(b.star)popup('⭐ STAR! +500','#fffb00');
+      else if(b.gem){
+        if(G.lvl===3){G.ef.emeralds++;popup('💎 EMERALD! +200','#00ffcc');}
+        else popup('💎 GEM +200','#00ffcc');
+      }
+      else if(b.ring)popup('💍 RING +100','#ff88ff');
+      if(G.lvl===3)efUpdateHUD();else updateHUD();
+    }
+  }
+}
+
+function tickParts(){
+  G.parts=G.parts.filter(function(p){return p.lf>0;});
+  for(var i=0;i<G.parts.length;i++){var p=G.parts[i];p.x+=p.vx;p.y+=p.vy;p.vy+=p.k==='j'?.04:.2;p.vx*=.95;p.lf--;p.a=p.lf/p.mf;}
+}
+function tickClouds(){for(var i=0;i<G.clouds.length;i++)G.clouds[i].x+=G.clouds[i].spd;}
+function spawnFx(x,y,col,n,k){
+  for(var i=0;i<n;i++){
+    var a=(6.28*i/n)+rnd(-.4,.4),s=k==='c'||k==='r'?2.8:k==='j'||k==='l'?2.2:4.5;
+    G.parts.push({x:x,y:y,vx:Math.cos(a)*s*rnd(.4,1),vy:Math.sin(a)*s*rnd(.4,1)-(k==='j'||k==='l'?2:0),col:col,lf:40,mf:40,a:1,r:k==='c'||k==='r'?4:2.5,k:k});
+  }
+}
+function takeDmg(){
+  if(G.lvl===3){efRunOver();return;}
+  G.lives--;G.inv=140;G.combo=0;document.getElementById('hcombo').style.opacity='0';
+  var p=G.player;p.vy=-9;p.vx=p.fr?-6:6;
+  spawnFx(p.x+p.w/2,p.y,'#ff4444',14,'b');popup('💔 OUCH!','#ff4444');updateHUD();
+  if(G.lives<=0){G.state='dead';setTimeout(function(){showOv('dead');},700);}
+}
+function fallDie(){G.lives--;G.combo=0;if(G.lives<=0){G.state='dead';setTimeout(function(){showOv('dead');},500);return;}var p=G.player;p.x=120;p.y=H*.5;p.vx=0;p.vy=0;G.inv=90;popup('💀 Fell off!','#ff8888');updateHUD();}
+
+// ═══════════════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════════════
+function render(){
+  ctx.clearRect(0,0,W,H);
+  try{
+    if(G.state==='menu'){drawMenuBg();return;}
+    if(G.lvl===0)drawSavBG();
+    else if(G.lvl===1)drawForBG();
+    else if(G.lvl===2)drawGHBG();
+    else drawForeverBG();
+    ctx.save();
+    ctx.translate(-Math.round(G.sx),0);
+    if(G.lvl===1){drawCrystalVines();drawFog();drawVines();}
+    drawPlats();drawSecrets();drawCoins();drawEnemies();drawTrail();drawSquid();
+    ctx.restore();
+    if(G.lvl===3)drawSpeedLines();
+    drawParts();drawScanlines();
+  }catch(err){ctx.fillStyle='#000820';ctx.fillRect(0,0,W,H);}
+}
+
+function drawScanlines(){
+  if(G.lvl===3){
+    ctx.globalAlpha=.020;ctx.fillStyle='#000';
+    for(var y=0;y<H;y+=3)ctx.fillRect(0,y,W,1);
+    ctx.globalAlpha=1;
+    var vg=ctx.createRadialGradient(W*.5,H*.5,H*.08,W*.5,H*.5,H*.82);
+    vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,8,0,.42)');
+    ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);
+    return;
+  }
+  if(G.lvl===2){
+    // subtle natural scanlines
+    ctx.globalAlpha=.015;ctx.fillStyle='#001a08';
+    for(var y=0;y<H;y+=3)ctx.fillRect(0,y,W,1);
+    ctx.globalAlpha=1;
+    // soft vignette
+    var vig=ctx.createRadialGradient(W*.5,H*.5,H*.15,W*.5,H*.5,H*.8);
+    vig.addColorStop(0,'rgba(0,0,0,0)');vig.addColorStop(1,'rgba(0,8,4,.35)');
+    ctx.fillStyle=vig;ctx.fillRect(0,0,W,H);
+  }else{
+    ctx.globalAlpha=.018;ctx.fillStyle='#000';
+    for(var y=0;y<H;y+=3)ctx.fillRect(0,y,W,1);
+    ctx.globalAlpha=1;
+  }
+}
+
+// ── MENU BG ───────────────────────────────────────────────
+function drawMenuBg(){
+  var g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#000a14');g.addColorStop(.5,'#001a0a');g.addColorStop(1,'#001208');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  for(var i=0;i<60;i++){
+    var dx=(i*137+G.frame*.2)%W,dy=(i*97+G.frame*((i%3)*.05))%H;
+    ctx.globalAlpha=(.3+.7*((Math.sin(G.frame*.05+i)*.5+.5)))*.6;
+    ctx.fillStyle=i%3===0?'rgba(100,255,150,.8)':'rgba(180,230,255,.8)';ctx.beginPath();ctx.arc(dx,dy,.4+((i*31)%3)*.5,0,6.28);ctx.fill();
+  }
+  ctx.globalAlpha=1;
+  var gg=ctx.createLinearGradient(0,H*.78,0,H);gg.addColorStop(0,'#003a10');gg.addColorStop(1,'#001a06');
+  ctx.fillStyle=gg;ctx.fillRect(0,H*.78,W,H*.22);
+  ctx.fillStyle='#00aa30';for(var i=0;i<14;i++){var gx=((i*140+G.frame*.5)%(W+100))-50;ctx.beginPath();ctx.ellipse(gx,H*.78,55,28,0,Math.PI,0);ctx.fill();}
+  ctx.fillStyle='#00cc38';for(var i=0;i<12;i++){var gx=((i*180+100+G.frame*.3)%(W+100))-50;ctx.beginPath();ctx.ellipse(gx,H*.78,40,22,0,Math.PI,0);ctx.fill();}
+  // floating emeralds on menu
+  for(var i=0;i<5;i++){
+    var ex=(i*220+G.frame*.4+80)%(W+60)-30;
+    var ey=H*.65+Math.sin(G.frame*.04+i*1.5)*20;
+    ctx.globalAlpha=.3+Math.sin(G.frame*.06+i)*.2;
+    ctx.fillStyle='rgba(0,255,180,.4)';ctx.beginPath();ctx.arc(ex,ey,12,0,6.28);ctx.fill();
+    ctx.globalAlpha=.8;ctx.fillStyle='#00cc99';
+    ctx.beginPath();ctx.moveTo(ex,ey-8);ctx.lineTo(ex+7,ey);ctx.lineTo(ex,ey+8);ctx.lineTo(ex-7,ey);ctx.closePath();ctx.fill();
+  }
+  ctx.globalAlpha=1;
+}
+
+// ── CYAN PALM CIRCUIT BG ─────────────────────────────────
+function drawSavBG(){
+  // Bright tropical cyan sky
+  var sk=ctx.createLinearGradient(0,0,0,H);
+  sk.addColorStop(0,'#000d20');sk.addColorStop(.12,'#002860');
+  sk.addColorStop(.34,'#0066cc');sk.addColorStop(.56,'#00aaee');
+  sk.addColorStop(.78,'#00eeff');sk.addColorStop(1,'#ccffff');
+  ctx.fillStyle=sk;ctx.fillRect(0,0,W,H);
+  // Twinkling stars in upper sky
+  for(var i=0;i<80;i++){
+    var sx2=(i*1372917%Math.floor(W)),sy=(i*979313%Math.floor(H*.42));
+    var blink=.2+.8*((Math.sin(G.frame*.05+i*1.1)*.5+.5));
+    ctx.globalAlpha=blink*.7;ctx.fillStyle='#ccffff';
+    ctx.beginPath();ctx.arc(sx2,sy,.3+((i*29)%4)*.35,0,6.28);ctx.fill();
+  }
+  ctx.globalAlpha=1;
+  // Chrome sun — radial glare disc
+  var sunX=W*.76,sunY=H*.16;
+  var sg=ctx.createRadialGradient(sunX,sunY,0,sunX,sunY,H*.35);
+  sg.addColorStop(0,'rgba(255,255,248,1)');sg.addColorStop(.15,'rgba(200,255,255,.55)');
+  sg.addColorStop(.5,'rgba(0,200,255,.20)');sg.addColorStop(1,'rgba(0,80,200,0)');
+  ctx.fillStyle=sg;ctx.fillRect(0,0,W,H);
+  var cg2=ctx.createRadialGradient(sunX-H*.04,sunY-H*.04,0,sunX,sunY,H*.1);
+  cg2.addColorStop(0,'#ffffff');cg2.addColorStop(.38,'#ccffff');cg2.addColorStop(1,'#0088cc');
+  ctx.fillStyle=cg2;ctx.beginPath();ctx.arc(sunX,sunY,H*.1,0,6.28);ctx.fill();
+  ctx.strokeStyle='rgba(0,220,255,.45)';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(sunX,sunY,H*.1,0,6.28);ctx.stroke();
+  // Far mountain silhouettes — 4 parallax layers
+  drawCyanMtns(G.sx*.04,H*.55,'#002244',H*.46);
+  drawCyanMtns(G.sx*.09,H*.62,'#003366',H*.40);
+  drawCyanMtns(G.sx*.17,H*.68,'#0055aa',H*.34);
+  drawCyanMtns(G.sx*.30,H*.74,'#0077bb',H*.28);
+  // Chrome loop silhouettes
+  drawChromeLoops(G.sx*.22);
+  // Layered clouds — bright cyan-white
+  drawLayeredClouds('rgba(200,245,255,');
+  // Bright cyan grass hills
+  drawCyanGrass(G.sx*.64);
+  // Cyan palms
+  drawCyanPalms(G.sx*.48);
+  // Ground — chrome teal
+  var gnd=ctx.createLinearGradient(0,H*.85,0,H);
+  gnd.addColorStop(0,'#00ffff');gnd.addColorStop(.04,'#00eedd');
+  gnd.addColorStop(.20,'#0088aa');gnd.addColorStop(.50,'#004466');gnd.addColorStop(1,'#001133');
+  ctx.fillStyle=gnd;ctx.fillRect(0,H*.85,W,H*.15);
+  ctx.fillStyle='#00ffff';ctx.fillRect(0,H*.868,W,3);
+  ctx.fillStyle='#00ddee';ctx.fillRect(0,H*.882,W,2);
+  ctx.fillStyle='#0066aa';ctx.fillRect(0,H*.895,W,1.5);
+  var gglow=ctx.createLinearGradient(0,H*.82,0,H*.88);
+  gglow.addColorStop(0,'rgba(0,255,238,0)');gglow.addColorStop(1,'rgba(0,255,238,.22)');
+  ctx.fillStyle=gglow;ctx.fillRect(0,H*.82,W,H*.07);
+  for(var i=0;i<50;i++){
+    var fx=((i*46-G.sx*.68+46000)%(W+50))-25;
+    var fc=['#00ffee','#aaffff','#ffffff','#00ddff','#88ffff','#ccffff'];
+    ctx.fillStyle=fc[i%6];ctx.beginPath();ctx.arc(fx,H*.857,3,0,6.28);ctx.fill();
+    ctx.globalAlpha=.4;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(fx,H*.857,1.2,0,6.28);ctx.fill();ctx.globalAlpha=1;
+  }
+}
+
+function drawCyanMtns(off,baseY,col,hR){
+  ctx.fillStyle=col;
+  for(var i=0;i<16;i++){
+    var mx=((i*470-off+7520)%7520)-180,mw=300+(i*71)%220,mh=hR*(.38+(i*43)%58/100);
+    ctx.beginPath();ctx.moveTo(mx,baseY);
+    ctx.bezierCurveTo(mx+mw*.2,baseY-mh,mx+mw*.8,baseY-mh,mx+mw,baseY);
+    ctx.lineTo(mx+mw,baseY+50);ctx.lineTo(mx,baseY+50);ctx.closePath();ctx.fill();
+  }
+}
+
+function drawChromeLoops(off){
+  ctx.globalAlpha=.11;ctx.strokeStyle='#aaffff';
+  for(var i=0;i<6;i++){
+    var lx=((i*1350-off+8100)%8100)-200,lr=58+(i*37)%50,ly=H*(.63+(i%3)*.05);
+    ctx.lineWidth=8;ctx.beginPath();ctx.arc(lx,ly,lr,0,6.28);ctx.stroke();
+    ctx.lineWidth=12;ctx.globalAlpha=.06;
+    ctx.beginPath();ctx.moveTo(lx-lr*1.5,ly+lr*.2);ctx.lineTo(lx-lr,ly);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(lx+lr,ly);ctx.lineTo(lx+lr*1.5,ly+lr*.2);ctx.stroke();
+    ctx.globalAlpha=.11;ctx.lineWidth=8;
+  }
+  ctx.globalAlpha=1;
+}
+
+function drawCyanGrass(off){
+  ctx.fillStyle='#006677';
+  for(var i=0;i<18;i++){var gx=((i*240-off+240*25)%(W+260))-130;ctx.beginPath();ctx.ellipse(gx,H*.86,148+(i*37)%80,55+(i*23)%28,0,Math.PI,0);ctx.fill();}
+  ctx.fillStyle='#00aabb';
+  for(var i=0;i<14;i++){var gx=((i*290+140-off*.82+290*22)%(W+310))-155;ctx.beginPath();ctx.ellipse(gx,H*.86,110+(i*41)%60,42+(i*19)%22,0,Math.PI,0);ctx.fill();}
+  ctx.fillStyle='#00ddee';
+  for(var i=0;i<10;i++){var gx=((i*360+220-off*.70+360*22)%(W+380))-190;ctx.beginPath();ctx.ellipse(gx,H*.86,80+(i*29)%40,30+(i*17)%18,0,Math.PI,0);ctx.fill();}
+  ctx.globalAlpha=.4;ctx.strokeStyle='#00ffee';ctx.lineWidth=2.2;
+  for(var i=0;i<18;i++){var gx=((i*240-off+240*25)%(W+260))-130;ctx.beginPath();ctx.ellipse(gx,H*.86,148+(i*37)%80,55+(i*23)%28,0,Math.PI,0);ctx.stroke();}
+  ctx.globalAlpha=1;
+}
+
+function drawCyanPalms(off){
+  for(var i=0;i<12;i++){
+    var tx=((i*370-off+370*25)%(W+390))-90,ty=H*.86,th=78+(i*27)%44;
+    ctx.save();ctx.translate(tx,ty);
+    ctx.globalAlpha=.2;ctx.fillStyle='#00ffee';ctx.fillRect(-11,-th,22,th);ctx.globalAlpha=1;
+    ctx.fillStyle='#001a33';ctx.fillRect(-5,-th,10,th);ctx.fillStyle='#002a44';ctx.fillRect(-3,-th,6,th);
+    ctx.fillStyle='#00ffee';for(var r=0;r<5;r++)ctx.fillRect(-5,-th*.22*r-8,10,2.5);
+    ctx.restore();
+    var fx=tx,fy=ty-th;
+    ctx.globalAlpha=.22;
+    for(var f=0;f<7;f++){var fa=f*(6.28/7)-1.1;ctx.save();ctx.translate(fx,fy);ctx.rotate(fa);ctx.fillStyle=f%2===0?'#00ffee':'#aaffff';ctx.beginPath();ctx.moveTo(0,0);ctx.bezierCurveTo(8,-10,28,-18,60,-10);ctx.bezierCurveTo(28,-3,8,1,0,0);ctx.fill();ctx.restore();}
+    ctx.globalAlpha=1;
+    for(var f=0;f<7;f++){var fa=f*(6.28/7)-1.1;ctx.save();ctx.translate(fx,fy);ctx.rotate(fa);ctx.fillStyle=f%2===0?'#00aacc':'#007799';ctx.beginPath();ctx.moveTo(0,0);ctx.bezierCurveTo(8,-8,28,-14,58,-8);ctx.bezierCurveTo(28,-2,8,2,0,0);ctx.fill();ctx.restore();}
+    ctx.globalAlpha=.7;ctx.fillStyle='#00ffff';ctx.beginPath();ctx.arc(fx,fy,5,0,6.28);ctx.fill();ctx.globalAlpha=1;
+    ctx.fillStyle=i%2===0?'#00ffee':'#aaffff';ctx.beginPath();ctx.arc(fx+6,fy+5,6,0,6.28);ctx.fill();ctx.beginPath();ctx.arc(fx-5,fy+7,5,0,6.28);ctx.fill();
+    ctx.globalAlpha=.28;ctx.fillStyle='#eeffff';ctx.beginPath();ctx.arc(fx+6,fy+5,9,0,6.28);ctx.fill();ctx.globalAlpha=1;
+  }
+}
+
+// Shared 3-layer parallax cloud renderer
+function drawLayeredClouds(baseCol){
+  for(var i=0;i<G.clouds.length;i++){
+    var c=G.clouds[i],par=c.layer===0?.05:c.layer===1?.12:.21;
+    var cx=((c.x-G.sx*par+LW*4)%(LW+c.w+600))-c.w,scx=cx*(W/LW);
+    ctx.globalAlpha=c.a*(c.layer===0?.44:c.layer===1?.60:.75);
+    ctx.fillStyle=baseCol+'1)';
+    puffCloud(scx,c.y,c.w,c.h);
+  }
+  ctx.globalAlpha=1;
+}
+
+// ── EMERALD FOREST BG ─────────────────────────────────────
+function drawForBG(){
+  // Deep ethereal forest — dark teal to glowing turquoise
+  var sk=ctx.createLinearGradient(0,0,0,H);
+  sk.addColorStop(0,'#000a07');sk.addColorStop(.14,'#001a0c');
+  sk.addColorStop(.36,'#003d1a');sk.addColorStop(.60,'#006633');
+  sk.addColorStop(.80,'#00aa55');sk.addColorStop(1,'#00ffaa');
+  ctx.fillStyle=sk;ctx.fillRect(0,0,W,H);
+  // Soft aurora ribbons — turquoise and cyan
+  for(var a=0;a<4;a++){
+    var aP=G.frame*.003+a*1.6,aY=H*(.06+a*.065)+Math.sin(aP)*H*.04;
+    var aC=['rgba(0,255,180,','rgba(0,200,255,','rgba(100,255,200,','rgba(0,150,200,'];
+    ctx.globalAlpha=.10+Math.sin(aP*.6+a)*.06;
+    var ag=ctx.createLinearGradient(0,aY,0,aY+H*.07);
+    ag.addColorStop(0,aC[a]+'0)');ag.addColorStop(.5,aC[a]+'.9)');ag.addColorStop(1,aC[a]+'0)');
+    ctx.fillStyle=ag;ctx.fillRect(0,aY,W,H*.07);
+  }
+  ctx.globalAlpha=1;
+  // Bioluminescent star-spores
+  for(var i=0;i<95;i++){
+    var sx2=(i*1537913%Math.floor(W)),sy=(i*879317%Math.floor(H*.60));
+    var blink=.2+.8*((Math.sin(G.frame*.04+i*1.2)*.5+.5));
+    var ec=['#88ffcc','#aaffee','#00ffbb','#44ffaa','#ccffee','#00ddaa'];
+    ctx.globalAlpha=blink*.72;ctx.fillStyle=ec[i%6];
+    ctx.beginPath();ctx.arc(sx2,sy,.3+((i*31)%5)*.32,0,6.28);ctx.fill();
+    if(i%14===0){ctx.globalAlpha=blink*.18;ctx.beginPath();ctx.arc(sx2,sy,((i*31)%5)*.32*5+2,0,6.28);ctx.fill();}
+  }
+  ctx.globalAlpha=1;
+  // Crystal moon — pale turquoise
+  var mx=W*.2,my=H*.14;
+  var mg=ctx.createRadialGradient(mx,my,0,mx,my,54);
+  mg.addColorStop(0,'#ccffee');mg.addColorStop(.5,'rgba(0,255,200,.48)');mg.addColorStop(1,'rgba(0,150,100,0)');
+  ctx.fillStyle=mg;ctx.beginPath();ctx.arc(mx,my,54,0,6.28);ctx.fill();
+  ctx.globalAlpha=.55;ctx.strokeStyle='#00ffcc';ctx.lineWidth=2;ctx.beginPath();ctx.arc(mx,my,38,0,6.28);ctx.stroke();ctx.globalAlpha=1;
+  // Far tree silhouettes — 5 parallax layers
+  drawEmeraldTrees(G.sx*.04,H*.57,'#001208',.36);
+  drawEmeraldTrees(G.sx*.09,H*.63,'#001c10',.50);
+  drawEmeraldTrees(G.sx*.16,H*.70,'#002214',.64);
+  drawEmeraldTrees(G.sx*.28,H*.76,'#003322',.80);
+  drawEmeraldTrees(G.sx*.46,H*.82,'#004433',1.0);
+  // Crystal vine curtains in background
+  drawVineCurtain(G.sx*.20);
+  // Turquoise mist bands
+  for(var i=0;i<4;i++){
+    var my2=H*(.44+i*.10);
+    var mg2=ctx.createLinearGradient(0,my2,0,my2+H*.10);
+    mg2.addColorStop(0,'rgba(0,255,180,0)');mg2.addColorStop(.5,'rgba(0,255,180,.055)');mg2.addColorStop(1,'rgba(0,255,180,0)');
+    ctx.fillStyle=mg2;ctx.fillRect(0,my2,W,H*.10);
+  }
+  // Layered clouds — teal mist
+  drawLayeredClouds('rgba(0,200,150,');
+  // Floating spores / fireflies
+  for(var i=0;i<28;i++){
+    var ff=((i*235+G.frame*(.28+i*.017)-G.sx*.62+100000)%(W+90))-45;
+    var fy=H*.30+Math.sin(G.frame*.04+i*1.4)*70,fa=.35+Math.sin(G.frame*.08+i*.95)*.65;
+    ctx.globalAlpha=fa*.88;ctx.fillStyle=i%3===0?'#00ffcc':i%3===1?'#44ffaa':'#aaffee';
+    ctx.beginPath();ctx.arc(ff,fy,2.8,0,6.28);ctx.fill();
+    ctx.globalAlpha=fa*.20;ctx.fillStyle='#88ffcc';ctx.beginPath();ctx.arc(ff,fy,8,0,6.28);ctx.fill();
+  }
+  ctx.globalAlpha=1;
+  // Near rolling emerald grass
+  drawEmeraldGrass(G.sx*.65);
+  // Ground — deep emerald earth
+  var gnd=ctx.createLinearGradient(0,H*.85,0,H);
+  gnd.addColorStop(0,'#88ffcc');gnd.addColorStop(.04,'#00ffaa');
+  gnd.addColorStop(.18,'#00cc77');gnd.addColorStop(.45,'#006633');gnd.addColorStop(1,'#001a08');
+  ctx.fillStyle=gnd;ctx.fillRect(0,H*.85,W,H*.15);
+  ctx.fillStyle='#00ffee';ctx.fillRect(0,H*.868,W,3);
+  ctx.fillStyle='#00dd99';ctx.fillRect(0,H*.882,W,2);
+  ctx.fillStyle='#005533';ctx.fillRect(0,H*.895,W,1.5);
+  var gglow=ctx.createLinearGradient(0,H*.82,0,H*.88);
+  gglow.addColorStop(0,'rgba(0,255,180,0)');gglow.addColorStop(1,'rgba(0,255,180,.35)');
+  ctx.fillStyle=gglow;ctx.fillRect(0,H*.82,W,H*.07);
+  for(var i=0;i<52;i++){
+    var fx=((i*44-G.sx*.68+44000)%(W+48))-24;
+    var fc=['#00ffcc','#44ffaa','#aaffee','#00ddaa','#88ffcc','#ccffee'];
+    ctx.fillStyle=fc[i%6];ctx.beginPath();ctx.arc(fx,H*.856,3.2,0,6.28);ctx.fill();
+    ctx.globalAlpha=.45;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(fx,H*.856,1.2,0,6.28);ctx.fill();ctx.globalAlpha=1;
+  }
+}
+
+function drawEmeraldTrees(off,baseY,col,density){
+  ctx.fillStyle=col;
+  var count=Math.ceil(12*density),spacing=Math.max(120,240/density),total=spacing*(count+4);
+  for(var i=0;i<=count+3;i++){
+    var tx=((i*spacing-off%total+total)%total)-80,th=baseY*(.28+(i*31)%42/100),tw=50+(i*19)%40;
+    ctx.beginPath();ctx.moveTo(tx,baseY-th);ctx.lineTo(tx-tw*.55,baseY);ctx.lineTo(tx+tw*.55,baseY);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(tx,baseY-th*1.15);ctx.lineTo(tx-tw*.42,baseY-th*.34);ctx.lineTo(tx+tw*.42,baseY-th*.34);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(tx,baseY-th*1.32);ctx.lineTo(tx-tw*.28,baseY-th*.65);ctx.lineTo(tx+tw*.28,baseY-th*.65);ctx.closePath();ctx.fill();
+    ctx.globalAlpha=.32;ctx.fillStyle='#00ffaa';ctx.beginPath();ctx.arc(tx,baseY-th*1.35,tw*.09,0,6.28);ctx.fill();ctx.globalAlpha=1;ctx.fillStyle=col;
+  }
+}
+
+function drawVineCurtain(off){
+  ctx.globalAlpha=.16;
+  for(var i=0;i<22;i++){
+    var vx=((i*390-off+390*22)%(W+420))-100;
+    var vlen=H*(.12+(i*31)%24/100),vy=H*(.19+(i*17)%18/100);
+    ctx.strokeStyle='#00ffcc';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(vx,vy);
+    ctx.bezierCurveTo(vx+Math.sin(i)*18,vy+vlen*.3,vx-Math.sin(i+1)*14,vy+vlen*.7,vx+Math.sin(i*2)*10,vy+vlen);
+    ctx.stroke();
+    ctx.fillStyle='#88ffee';ctx.beginPath();ctx.arc(vx+Math.sin(i*2)*10,vy+vlen,4,0,6.28);ctx.fill();
+  }
+  ctx.globalAlpha=1;
+}
+
+function drawEmeraldGrass(off){
+  ctx.fillStyle='#004422';
+  for(var i=0;i<18;i++){var gx=((i*240-off+240*25)%(W+260))-130;ctx.beginPath();ctx.ellipse(gx,H*.86,148+(i*37)%80,56+(i*23)%28,0,Math.PI,0);ctx.fill();}
+  ctx.fillStyle='#009955';
+  for(var i=0;i<14;i++){var gx=((i*290+140-off*.82+290*22)%(W+310))-155;ctx.beginPath();ctx.ellipse(gx,H*.86,110+(i*41)%60,44+(i*19)%22,0,Math.PI,0);ctx.fill();}
+  ctx.fillStyle='#00dd88';
+  for(var i=0;i<10;i++){var gx=((i*360+220-off*.70+360*22)%(W+380))-190;ctx.beginPath();ctx.ellipse(gx,H*.86,82+(i*29)%40,33+(i*17)%18,0,Math.PI,0);ctx.fill();}
+  ctx.globalAlpha=.55;ctx.strokeStyle='#00ffcc';ctx.lineWidth=2.5;
+  for(var i=0;i<18;i++){var gx=((i*240-off+240*25)%(W+260))-130;ctx.beginPath();ctx.ellipse(gx,H*.86,148+(i*37)%80,56+(i*23)%28,0,Math.PI,0);ctx.stroke();}
+  ctx.globalAlpha=1;
+}
+
+// Crystal vines drawn in world-space (called each frame for lvl 1)
+function drawCrystalVines(){
+  var vineX=[300,660,1180,1540,1980,2360,2700,3080,3480,3830,4180,4540,4900,5240,5640,6040,6440,6860];
+  for(var v=0;v<vineX.length;v++){
+    var vx=vineX[v]-G.sx;if(vx<-80||vx>W+80)continue;
+    var phase=G.frame*.025+v*.9,swing=Math.sin(phase)*13;
+    var vlen=H*(.14+(v%4)*.04),vy0=H*(.21+(v%3)*.06);
+    ctx.globalAlpha=.65;ctx.strokeStyle='#00ffcc';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(vx,vy0);
+    ctx.bezierCurveTo(vx+swing*.4,vy0+vlen*.3,vx-swing*.3,vy0+vlen*.7,vx+swing,vy0+vlen);
+    ctx.stroke();
+    ctx.globalAlpha=.8+Math.sin(phase)*.2;
+    ctx.fillStyle=v%3===0?'#00ffcc':v%3===1?'#44ffee':'#aaffcc';
+    ctx.save();ctx.translate(vx+swing,vy0+vlen);ctx.rotate(phase*.3);
+    ctx.beginPath();ctx.moveTo(0,-7);ctx.lineTo(5,0);ctx.lineTo(0,8);ctx.lineTo(-5,0);ctx.closePath();ctx.fill();
+    ctx.globalAlpha=.28;ctx.fillStyle='#eeffee';ctx.beginPath();ctx.arc(0,0,9,0,6.28);ctx.fill();
+    ctx.restore();
+    for(var l=0;l<3;l++){
+      var lt=(l+1)/4,lx2=vx+swing*lt*.5+(Math.cos(phase+l)*8),ly2=vy0+vlen*lt;
+      ctx.globalAlpha=.50;ctx.fillStyle='#00cc88';
+      ctx.beginPath();ctx.ellipse(lx2,ly2,8+(l*2),4+l,phase*.5,0,6.28);ctx.fill();
+    }
+    ctx.globalAlpha=1;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  GREEN HILL FUTURE BACKGROUND — Classic Sonic inspired
+//  Navy blue sky · Bright green meadows · Brown soil checkerboard
+//  Waterfalls · Palm trees · Loop silhouettes · Fluffy clouds
+// ═══════════════════════════════════════════════════════════
+function drawGHBG(){
+  // ── NAVY BLUE SKY ─────────────────────────────────────────
+  var sk=ctx.createLinearGradient(0,0,0,H);
+  sk.addColorStop(0,'#000822');     // dark navy zenith
+  sk.addColorStop(.08,'#001040');
+  sk.addColorStop(.22,'#0028aa');   // rich navy blue
+  sk.addColorStop(.42,'#0044cc');   // vibrant blue
+  sk.addColorStop(.60,'#2266dd');   // bright blue
+  sk.addColorStop(.78,'#4488ee');   // lighter blue
+  sk.addColorStop(.92,'#88bbff');   // pale blue horizon
+  sk.addColorStop(1,'#bbddff');
+  ctx.fillStyle=sk;ctx.fillRect(0,0,W,H);
+
+  // ── SOFT WHITE CLOUDS — big fluffy Sonic-style ────────────
+  drawGHClouds();
+
+  // ── PARALLAX HILLS — 6 layers of lush green rolling meadows ──
+  // Layer 1: farthest — very dark green (barely visible)
+  drawGHGreenHills(G.sx*.02,H*.52,'#0a3312',H*.48);
+  // Layer 2: dark emerald
+  drawGHGreenHills(G.sx*.05,H*.58,'#0f4418',H*.42);
+  // Layer 3: mid green
+  drawGHGreenHills(G.sx*.10,H*.64,'#1a6622',H*.36);
+  // Layer 4: brighter green
+  drawGHGreenHills(G.sx*.18,H*.70,'#228833',H*.30);
+  // Layer 5: vivid green
+  drawGHGreenHills(G.sx*.30,H*.76,'#33aa44',H*.24);
+  // Layer 6: nearest — bright lime green with details
+  drawGHGreenHills(G.sx*.46,H*.82,'#44cc55',H*.18);
+
+  // ── LOOP-DE-LOOP SILHOUETTES ──────────────────────────────
+  drawGHLoops(G.sx*.15);
+
+  // ── WATERFALLS ────────────────────────────────────────────
+  drawGHWaterfalls(G.sx*.22);
+
+  // ── PALM TREES — brown trunks, green fronds ───────────────
+  drawGHPalmTrees(G.sx*.42);
+
+  // ── SHRUBS & BUSHES ───────────────────────────────────────
+  drawGHShrubs(G.sx*.52);
+
+  // ── NEAR GRASS — lime green bumps ─────────────────────────
+  drawGHGrassClassic(G.sx*.60);
+
+  // ── GROUND — brown soil with checkerboard ─────────────────
+  // Main brown earth
+  var gnd=ctx.createLinearGradient(0,H*.85,0,H);
+  gnd.addColorStop(0,'#44cc55');   // grass top edge
+  gnd.addColorStop(.03,'#33aa44');
+  gnd.addColorStop(.07,'#8B5E3C');  // brown soil transition
+  gnd.addColorStop(.15,'#7A4C2A');  // rich brown
+  gnd.addColorStop(.35,'#5C3A1E');  // darker brown
+  gnd.addColorStop(.60,'#3E2810');  // deep brown
+  gnd.addColorStop(1,'#1a0e04');    // very dark
+  ctx.fillStyle=gnd;ctx.fillRect(0,H*.85,W,H*.15);
+
+  // Brown/orange checkerboard pattern in soil (classic Sonic!)
+  drawGHCheckerSoil(G.sx*.65,H*.86);
+
+  // Thin grass line at top of soil
+  ctx.fillStyle='#66dd44';ctx.fillRect(0,H*.852,W,3);
+  ctx.fillStyle='#44bb33';ctx.fillRect(0,H*.856,W,2);
+
+  // ── FLOWERS along the ground ──────────────────────────────
+  for(var i=0;i<60;i++){
+    var fx=((i*42-G.sx*.68+42000)%(W+46))-23;
+    // Grass tufts
+    if(i%3===0){
+      ctx.fillStyle='#55dd44';
+      ctx.fillRect(fx-2,H*.846,2,7);ctx.fillRect(fx+2,H*.847,2,6);ctx.fillRect(fx+5,H*.848,2,5);
+    }
+    // Small flowers
+    if(i%5===0){
+      var flcols=['#ff4444','#ffff44','#ff88ff','#ffffff','#ffaa44','#44aaff'];
+      ctx.fillStyle=flcols[i%6];
+      ctx.beginPath();ctx.arc(fx,H*.848,3,0,6.28);ctx.fill();
+      ctx.fillStyle='#ffff88';ctx.beginPath();ctx.arc(fx,H*.848,1.3,0,6.28);ctx.fill();
+    }
+  }
+
+  // ── HORIZON ATMOSPHERIC HAZE (slight blue) ────────────────
+  var hglow=ctx.createLinearGradient(0,H*.58,0,H*.72);
+  hglow.addColorStop(0,'rgba(100,180,255,0)');
+  hglow.addColorStop(.5,'rgba(100,180,255,.08)');
+  hglow.addColorStop(1,'rgba(100,180,255,0)');
+  ctx.fillStyle=hglow;ctx.fillRect(0,H*.58,W,H*.14);
+}
+
+// Classic Sonic green rolling hills with rounded tops
+function drawGHGreenHills(off,baseY,col,hR){
+  for(var i=0;i<20;i++){
+    var mx=((i*440-off+8800)%8800)-220;
+    var mw=280+(i*67)%240,mh=hR*(.36+(i*43)%62/100);
+    ctx.fillStyle=col;
+    ctx.beginPath();ctx.moveTo(mx,baseY);
+    ctx.bezierCurveTo(mx+mw*.15,baseY-mh,mx+mw*.85,baseY-mh,mx+mw,baseY);
+    ctx.lineTo(mx+mw,baseY+60);ctx.lineTo(mx,baseY+60);ctx.closePath();ctx.fill();
+  }
+}
+
+// Loop-de-loop silhouettes in background
+function drawGHLoops(off){
+  ctx.globalAlpha=.12;
+  for(var i=0;i<5;i++){
+    var lx=((i*1600-off+8000)%8000)-200;
+    var ly=H*(.60+(i%3)*.04);
+    var lr=55+(i*41)%55;
+    // Loop ring
+    ctx.strokeStyle='#1a5522';ctx.lineWidth=10;
+    ctx.beginPath();ctx.arc(lx,ly,lr,0,6.28);ctx.stroke();
+    // Entry/exit ramps
+    ctx.lineWidth=8;
+    ctx.beginPath();ctx.moveTo(lx-lr*1.6,ly+lr*.3);ctx.lineTo(lx-lr,ly);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(lx+lr,ly);ctx.lineTo(lx+lr*1.6,ly+lr*.3);ctx.stroke();
+    // Inner ring
+    ctx.globalAlpha=.06;ctx.lineWidth=14;
+    ctx.beginPath();ctx.arc(lx,ly,lr*.7,0,6.28);ctx.stroke();
+    ctx.globalAlpha=.12;
+  }
+  ctx.globalAlpha=1;
+}
+
+// Waterfalls cascading down in background
+function drawGHWaterfalls(off){
+  for(var i=0;i<4;i++){
+    var wx=((i*2200-off+8800)%8800)-100;
+    if(wx<-120||wx>W+120)continue;
+    var wy=H*(.55+(i%3)*.06);
+    var wh=H*(.22+(i%2)*.06);
+    var ww=20+(i*7)%16;
+    // Waterfall stream
+    ctx.globalAlpha=.55;
+    var wg=ctx.createLinearGradient(wx,wy,wx,wy+wh);
+    wg.addColorStop(0,'rgba(180,220,255,.7)');
+    wg.addColorStop(.3,'rgba(140,200,255,.5)');
+    wg.addColorStop(1,'rgba(100,180,255,.2)');
+    ctx.fillStyle=wg;
+    // Wavy stream
+    ctx.beginPath();ctx.moveTo(wx-ww/2,wy);
+    for(var y=0;y<wh;y+=8){
+      var wavex=Math.sin(G.frame*.08+y*.06+i)*4;
+      ctx.lineTo(wx-ww/2+wavex,wy+y);
+    }
+    ctx.lineTo(wx+ww/2+Math.sin(G.frame*.08+wh*.06+i)*4,wy+wh);
+    for(var y=wh;y>=0;y-=8){
+      var wavex=Math.sin(G.frame*.08+y*.06+i+2)*4;
+      ctx.lineTo(wx+ww/2+wavex,wy+y);
+    }
+    ctx.closePath();ctx.fill();
+    // Splash at bottom
+    ctx.fillStyle='rgba(200,230,255,.4)';
+    for(var s=0;s<5;s++){
+      var sx2=wx+Math.sin(G.frame*.12+s*1.5+i)*12;
+      var sy2=wy+wh+Math.abs(Math.sin(G.frame*.10+s+i))*8;
+      ctx.beginPath();ctx.arc(sx2,sy2,3+Math.random()*2,0,6.28);ctx.fill();
+    }
+    // White foam at top
+    ctx.fillStyle='rgba(255,255,255,.5)';
+    ctx.beginPath();ctx.ellipse(wx,wy,ww*.8,6,0,0,6.28);ctx.fill();
+    ctx.globalAlpha=1;
+  }
+}
+
+// Classic palm trees — brown trunks, green fan fronds
+function drawGHPalmTrees(off){
+  for(var i=0;i<12;i++){
+    var tx=((i*380-off+380*26)%(W+400))-100;
+    var ty=H*.855,th=70+(i*31)%50;
+    // Brown trunk
+    ctx.save();ctx.translate(tx,ty);
+    var trunkW=7+(i%3)*2;
+    // Trunk gradient (brown)
+    ctx.fillStyle='#5C3A1E';ctx.fillRect(-trunkW/2,-th,trunkW,th);
+    ctx.fillStyle='#7A4C2A';ctx.fillRect(-trunkW/2+1,-th,trunkW-2,th);
+    // Trunk rings
+    ctx.fillStyle='#4A2A10';
+    for(var r=0;r<6;r++)ctx.fillRect(-trunkW/2,-th*.18*r-10,trunkW,2.5);
+    // Slight curve highlight
+    ctx.fillStyle='#8B6040';ctx.fillRect(-1,-th,2,th);
+    ctx.restore();
+    // Green fan fronds
+    var fx=tx,fy=ty-th;
+    for(var f=0;f<8;f++){
+      var fa=f*(6.28/8)-1.2+Math.sin(G.frame*.02+i+f*.3)*.06;
+      var flen=48+(f*7)%22;
+      ctx.save();ctx.translate(fx,fy);ctx.rotate(fa);
+      // Dark frond
+      ctx.fillStyle=f%2===0?'#1a7730':'#228833';
+      ctx.beginPath();ctx.moveTo(0,0);
+      ctx.bezierCurveTo(6,-flen*.3,10,-flen*.7,flen*0.9,-flen*.15);
+      ctx.bezierCurveTo(10,-flen*.2,6,2,0,0);ctx.fill();
+      // Lighter highlight frond
+      ctx.fillStyle=f%2===0?'#33aa44':'#44bb55';
+      ctx.beginPath();ctx.moveTo(0,0);
+      ctx.bezierCurveTo(4,-flen*.25,8,-flen*.55,flen*0.7,-flen*.10);
+      ctx.bezierCurveTo(8,-flen*.12,4,1,0,0);ctx.fill();
+      ctx.restore();
+    }
+    // Coconut clusters
+    ctx.fillStyle='#8B5E3C';
+    ctx.beginPath();ctx.arc(fx+3,fy+3,5,0,6.28);ctx.fill();
+    ctx.beginPath();ctx.arc(fx-4,fy+5,4.5,0,6.28);ctx.fill();
+    ctx.fillStyle='#A07040';
+    ctx.beginPath();ctx.arc(fx+3,fy+3,3,0,6.28);ctx.fill();
+  }
+}
+
+// Low shrubs and bushes
+function drawGHShrubs(off){
+  for(var i=0;i<20;i++){
+    var bx=((i*320+60-off+320*22)%(W+340))-170;
+    var by=H*.855;
+    var bw=35+(i*23)%30,bh=18+(i*17)%14;
+    // Dark base
+    ctx.fillStyle='#1a6622';
+    ctx.beginPath();ctx.ellipse(bx,by,bw,bh,0,Math.PI,0);ctx.fill();
+    // Lighter top
+    ctx.fillStyle='#33aa44';
+    ctx.beginPath();ctx.ellipse(bx,by,bw*.8,bh*.7,0,Math.PI,0);ctx.fill();
+    // Highlight
+    ctx.fillStyle='#55cc55';
+    ctx.beginPath();ctx.ellipse(bx-bw*.15,by,bw*.4,bh*.5,0,Math.PI,0);ctx.fill();
+    // Small flowers on top
+    if(i%3===0){
+      ctx.fillStyle='#ff6644';
+      ctx.beginPath();ctx.arc(bx+bw*.2,by-bh*.6,3,0,6.28);ctx.fill();
+      ctx.fillStyle='#ffff44';
+      ctx.beginPath();ctx.arc(bx-bw*.1,by-bh*.5,2.5,0,6.28);ctx.fill();
+    }
+  }
+}
+
+// Lime green grass bumps — 3 layers
+function drawGHGrassClassic(off){
+  // Layer 1 — darkest, furthest
+  ctx.fillStyle='#228833';
+  for(var i=0;i<18;i++){
+    var gx=((i*240-off+240*24)%(W+260))-130;
+    ctx.beginPath();ctx.ellipse(gx,H*.86,150+(i*37)%80,55+(i*23)%28,0,Math.PI,0);ctx.fill();
+  }
+  // Layer 2 — mid green
+  ctx.fillStyle='#33bb44';
+  for(var i=0;i<14;i++){
+    var gx=((i*290+140-off*.82+290*22)%(W+320))-160;
+    ctx.beginPath();ctx.ellipse(gx,H*.86,115+(i*41)%60,44+(i*19)%22,0,Math.PI,0);ctx.fill();
+  }
+  // Layer 3 — lime green, nearest
+  ctx.fillStyle='#55dd55';
+  for(var i=0;i<10;i++){
+    var gx=((i*360+220-off*.70+360*22)%(W+380))-190;
+    ctx.beginPath();ctx.ellipse(gx,H*.86,85+(i*29)%40,34+(i*17)%18,0,Math.PI,0);ctx.fill();
+  }
+}
+
+// Brown/orange checkerboard soil (Sonic Green Hill classic!)
+function drawGHCheckerSoil(off,baseY){
+  var sq=18;
+  ctx.save();
+  for(var i=0;i<Math.ceil(W/sq)+4;i++){
+    var cx=((i*sq-off%sq+sq*200)%(W+sq*4))-sq*2;
+    for(var j=0;j<7;j++){
+      var cy=baseY+j*sq;
+      if((i+j)%2===0){
+        ctx.globalAlpha=.50;
+        ctx.fillStyle='#CC7733';  // warm orange-brown
+        ctx.fillRect(cx,cy,sq,sq);
+      }else{
+        ctx.globalAlpha=.40;
+        ctx.fillStyle='#884422';  // darker brown
+        ctx.fillRect(cx,cy,sq,sq);
+      }
+    }
+  }
+  ctx.restore();
+}
+
+// Fluffy white clouds — classic Sonic style
+function drawGHClouds(){
+  for(var i=0;i<G.clouds.length;i++){
+    var c=G.clouds[i];
+    var par=c.layer===0?.04:c.layer===1?.10:.18;
+    var cx=((c.x-G.sx*par+LW*4)%(LW+c.w+600))-c.w;
+    var scx=cx*(W/LW);
+    ctx.globalAlpha=c.a*(c.layer===0?.55:c.layer===1?.70:.85);
+    ctx.fillStyle='rgba(255,255,255,1)';
+    puffCloud(scx,c.y,c.w,c.h);
+    // Slight highlight on top
+    ctx.globalAlpha=c.a*.25;
+    ctx.fillStyle='rgba(255,255,255,1)';
+    puffCloud(scx+c.w*.05,c.y-c.h*.1,c.w*.85,c.h*.7);
+  }
+  ctx.globalAlpha=1;
+}
+
+// ── Shared BG helpers ─────────────────────────────────────
+
+
+// ── Vines ─────────────────────────────────────────────────
+function drawVines(){
+  if(!G.vines||!G.vines.length)return;
+  for(var vi=0;vi<G.vines.length;vi++){
+    var v=G.vines[vi];
+    var vax=v.ax-G.sx;
+    if(vax<-100||vax>W+100)continue;
+    var tipX=vax+Math.sin(v.ang)*v.len;
+    var tipY=v.ay+Math.cos(v.ang)*v.len;
+    ctx.save();
+    // rope with sag
+    var vgr=ctx.createLinearGradient(vax,v.ay,tipX,tipY);
+    vgr.addColorStop(0,'#001a08'); vgr.addColorStop(.4,v.col); vgr.addColorStop(1,'#001208');
+    ctx.globalAlpha=.88; ctx.strokeStyle=vgr; ctx.lineWidth=5; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(vax,v.ay);
+    var sagX=(vax+tipX)*.5+Math.sin(v.ang)*16, sagY=(v.ay+tipY)*.5+Math.abs(Math.sin(v.ang))*22;
+    ctx.quadraticCurveTo(sagX,sagY,tipX,tipY); ctx.stroke();
+    // leaf clusters
+    for(var l=1;l<=3;l++){
+      var lt=l/4, lx=vax+Math.sin(v.ang)*v.len*lt+sagX*(1-lt)*.3;
+      var ly=v.ay+Math.cos(v.ang)*v.len*lt+sagY*(1-lt)*.3;
+      ctx.globalAlpha=.72; ctx.fillStyle=l%2===0?'#00cc88':'#009955';
+      ctx.beginPath(); ctx.ellipse(lx,ly,9+l*2,4+l,.4+v.ang*.5,0,6.28); ctx.fill();
+      ctx.globalAlpha=.35+Math.sin(G.frame*.05+vi+l)*.25;
+      ctx.fillStyle='#00ffcc'; ctx.beginPath(); ctx.arc(lx,ly,4,0,6.28); ctx.fill();
+    }
+    // tip crystal
+    ctx.globalAlpha=.9;
+    ctx.fillStyle=(G.vine===vi)?'#ffffff':v.col;
+    ctx.beginPath(); ctx.moveTo(tipX,tipY-9);ctx.lineTo(tipX+6,tipY);ctx.lineTo(tipX,tipY+9);ctx.lineTo(tipX-6,tipY);ctx.closePath();ctx.fill();
+    ctx.globalAlpha=.28; ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(tipX,tipY,13,0,6.28); ctx.fill();
+    ctx.restore(); ctx.globalAlpha=1;
+  }
+}
+
+// ── Ambient fog particles (lvl 1) ─────────────────────────
+function drawFog(){
+  if(!G.fogs||G.lvl!==1)return;
+  for(var i=0;i<G.fogs.length;i++){
+    var f=G.fogs[i];
+    var fx=f.x-G.sx*(0.35+i*.003);
+    if(fx<-120||fx>W+120)continue;
+    var pulse=.5+Math.sin(G.frame*.03+(f.ph||0))*.5;
+    var fg=ctx.createRadialGradient(fx,f.y,0,fx,f.y,f.r);
+    fg.addColorStop(0,'rgba(0,255,170,'+(f.a*pulse)+')');
+    fg.addColorStop(1,'rgba(0,180,120,0)');
+    ctx.fillStyle=fg; ctx.beginPath(); ctx.arc(fx,f.y,f.r,0,6.28); ctx.fill();
+  }
+}
+
+// ── Secret zone indicators ─────────────────────────────────
+function drawSecrets(){
+  if(!G.secrets)return;
+  for(var i=0;i<G.secrets.length;i++){
+    var s=G.secrets[i]; if(s.found)continue;
+    var pulse=.4+Math.sin(G.frame*.06+i)*.4;
+    ctx.globalAlpha=pulse*.7;
+    ctx.fillStyle=s.col;
+    ctx.beginPath();
+    for(var pt=0;pt<5;pt++){
+      var a=pt*Math.PI*2/5-Math.PI/2;
+      var r=pt%2===0?11:5;
+      if(pt===0)ctx.moveTo(s.x+r*Math.cos(a),s.y+r*Math.sin(a));
+      else ctx.lineTo(s.x+r*Math.cos(a),s.y+r*Math.sin(a));
+    }
+    ctx.closePath(); ctx.fill();
+    ctx.globalAlpha=1;
+  }
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+//  GREEN HILL FOREVER — Enhanced Endless Engine
+//  Classic Sonic 2 inspired · Rich parallax · Generous emeralds
+//  10 chunk types · Difficulty ramps · Palette cycles
+// ═══════════════════════════════════════════════════════════════
+
+// ── Palette cycling — 8 Green Hill inspired palettes ──────────
+// [main,dark,neon,mid,dimid,darkest,sky1,sky2]
+var EF_PALS=[
+  ['#228833','#0a1f0a','#44ff88','#11aa44','#0d3a11','#040e04','#3388ff','#88ccff'], // classic green hill
+  ['#006633','#001a0a','#44ffaa','#009944','#003a11','#000e05','#2266cc','#66aaee'], // emerald
+  ['#0044aa','#000d33','#44aaff','#0066cc','#001a55','#000511','#0044aa','#88bbff'], // aquatic ruin
+  ['#884400','#2a1500','#ffaa44','#aa6600','#3a2200','#110800','#cc6600','#ffcc88'], // autumn hill
+  ['#aa0044','#33000d','#ff5588','#cc0055','#440016','#110006','#aa2244','#ff88aa'], // lava reef
+  ['#006677','#001a22','#00ffee','#008899','#002233','#000811','#004488','#44bbdd'], // ocean
+  ['#6600aa','#1a0028','#bb77ff','#8822cc','#2a0055','#0a0016','#4400aa','#9966ee'], // mystic cave
+  ['#228855','#0a2010','#88ffbb','#33bb66','#0d4a18','#040f06','#4488cc','#aaddff'], // hill top
+];
+function efPalCol(role){return EF_PALS[G.ef.pal%8][role];}
+
+// ── Chunk building helpers ─────────────────────────────────────
+var CHNK=920; // base chunk width (slightly wider for flow)
+
+// Helper: scatter emerald gems generously in a chunk
+function efScatterGems(coins,sx,w,baseY,count){
+  for(var i=0;i<count;i++){
+    var gx=sx+60+Math.random()*(w-120);
+    var gy=H*(baseY-0.08-Math.random()*0.14);
+    coins.push(mkGem(gx,gy));
+  }
+}
+
+// Helper: place coin arc along a curve
+function efCoinArc(coins,x0,y0,x1,y1,n){
+  for(var i=0;i<n;i++){
+    var t=i/(n-1);
+    var cx=x0+t*(x1-x0);
+    var cy=y0+t*(y1-y0)-Math.sin(t*3.14)*40;
+    coins.push(mkC(cx,cy));
+  }
+}
+
+// Helper: ring row
+function efRingRow(coins,sx,y,count,spacing){
+  for(var i=0;i<count;i++){var c=mkC(sx+i*spacing,y);c.ring=true;coins.push(c);}
+}
+
+// ── CHUNK TYPE 0: Flat run ──────────────────────────────────────
+function efFlat(sx,diff){
+  var C=efPalCol(0),C2=efPalCol(1),T=efPalCol(2);
+  var plats=[],enemies=[],coins=[];
+  plats.push({x:sx,y:H*.87,w:CHNK,h:H*.16,col:C,col2:C2,top:T,goal:false,type:'s'});
+  var ne=Math.min(5,Math.floor(1+diff*1.8));
+  var gap=Math.floor((CHNK-120)/(ne+1));
+  for(var i=0;i<ne;i++){
+    var ex=sx+80+(i+1)*gap;
+    enemies.push(mkE(ex,.86,i%3===0?'wasp':i%3===1?'crab':'bug'));
+    coins.push(mkC(ex-26,H*.79));coins.push(mkC(ex+26,H*.79));
+  }
+  for(var i=0;i<12;i++)coins.push(mkC(sx+40+i*72,H*.78));
+  // generous emeralds
+  coins.push(mkGem(sx+CHNK*.25,H*.72));
+  coins.push(mkGem(sx+CHNK*.75,H*.72));
+  if(diff>1)coins.push(mkGem(sx+CHNK*.5,H*.65));
+  if(Math.random()<.3)efRingRow(coins,sx+200,H*.70,3,50);
+  return{plats:plats,enemies:enemies,coins:coins,w:CHNK};
+}
+
+// ── CHUNK TYPE 1: Rolling hill ──────────────────────────────────
+function efHill(sx,diff){
+  var C=efPalCol(0),C2=efPalCol(1),T=efPalCol(2);
+  var plats=[],enemies=[],coins=[];
+  var peakYf=Math.max(0.44,0.68-diff*.045);
+  var steps=Math.floor(14+diff*3.5);
+  var hw=Math.floor(CHNK*.48);
+  pushSlope(plats,sx,.90,sx+hw,peakYf,steps,C,C2,T);
+  plats.push({x:sx+hw,y:H*peakYf,w:80,h:H*.16,col:C,col2:C2,top:T,goal:false,type:'s'});
+  pushSlope(plats,sx+hw+80,peakYf,sx+CHNK,.90,steps,C,C2,T);
+  // coins arc over hill
+  efCoinArc(coins,sx+40,H*.85,sx+CHNK-40,H*.85,14);
+  // emeralds on peak and slopes
+  coins.push(mkGem(sx+hw+40,H*(peakYf-.08)));
+  coins.push(mkGem(sx+hw*.5,H*(.88-((.88-peakYf)*.5))));
+  coins.push(mkGem(sx+hw+80+hw*.5,H*(.88-((.88-peakYf)*.5))));
+  if(diff>0.5)enemies.push(mkE(sx+hw*.4,.86,'bug'));
+  if(diff>1.2)enemies.push(mkE(sx+hw+40,peakYf,'wasp'));
+  if(Math.random()<.4)coins.push(mkStar(sx+hw+40,H*(peakYf-.16)));
+  return{plats:plats,enemies:enemies,coins:coins,w:CHNK};
+}
+
+// ── CHUNK TYPE 2: Big sweeping hill ─────────────────────────────
+function efBigHill(sx,diff){
+  var C=efPalCol(0),C2=efPalCol(1),T=efPalCol(2);
+  var plats=[],enemies=[],coins=[];
+  var peakYf=Math.max(0.38,0.60-diff*.05);
+  var steps=Math.floor(20+diff*4);
+  var hw=Math.floor(CHNK*.5);
+  pushSlope(plats,sx,.90,sx+hw,peakYf,steps,C,C2,T);
+  plats.push({x:sx+hw,y:H*peakYf,w:100,h:H*.16,col:C,col2:C2,top:T,goal:false,type:'s'});
+  pushSlope(plats,sx+hw+100,peakYf,sx+CHNK,.90,steps,C,C2,T);
+  efCoinArc(coins,sx+30,H*.86,sx+CHNK-30,H*.86,16);
+  // emerald cluster at peak
+  coins.push(mkGem(sx+hw+20,H*(peakYf-.08)));
+  coins.push(mkGem(sx+hw+50,H*(peakYf-.12)));
+  coins.push(mkGem(sx+hw+80,H*(peakYf-.08)));
+  coins.push(mkStar(sx+hw+50,H*(peakYf-.22)));
+  for(var i=1;i<=3;i++)enemies.push(mkE(sx+hw*i*.30,.86,'bug'));
+  enemies.push(mkE(sx+hw+50,peakYf,'wasp'));
+  return{plats:plats,enemies:enemies,coins:coins,w:CHNK};
+}
+
+// ── CHUNK TYPE 3: Valley dip ────────────────────────────────────
+function efValley(sx,diff){
+  var C=efPalCol(0),C2=efPalCol(1),T=efPalCol(2);
+  var plats=[],enemies=[],coins=[];
+  var hY=Math.max(0.58,0.74-diff*.03);
+  plats.push({x:sx,y:H*hY,w:260,h:H*.30,col:C,col2:C2,top:T,goal:false,type:'s'});
+  pushSlope(plats,sx+260,hY,sx+340,.92,6,C,C2,T);
+  plats.push({x:sx+340,y:H*.92,w:240,h:H*.10,col:C,col2:C2,top:T,goal:false,type:'s'});
+  pushSlope(plats,sx+580,.92,sx+660,hY,6,C,C2,T);
+  plats.push({x:sx+660,y:H*hY,w:260,h:H*.30,col:C,col2:C2,top:T,goal:false,type:'s'});
+  // sky bridge
+  plats.push({x:sx+320,y:H*(hY-.06),w:130,h:16,col:C,col2:C2,top:T,goal:false,type:'s'});
+  enemies.push(mkE(sx+420,.91,'crab'));
+  if(diff>1)enemies.push(mkE(sx+500,.91,'bug'));
+  for(var i=0;i<6;i++)coins.push(mkC(sx+340+i*38,H*(.91-.07)));
+  // emeralds in the valley and bridge
+  coins.push(mkGem(sx+460,H*.82));
+  coins.push(mkGem(sx+385,H*(hY-.12)));
+  coins.push(mkStar(sx+460,H*(.91-.18)));
+  return{plats:plats,enemies:enemies,coins:coins,w:CHNK};
+}
+
+// ── CHUNK TYPE 4: Steps/terraces ────────────────────────────────
+function efSteps(sx,diff){
+  var C=efPalCol(0),C2=efPalCol(1),T=efPalCol(2);
+  var plats=[],enemies=[],coins=[];
+  var nst=Math.min(7,4+Math.floor(diff));
+  var sw=Math.floor((CHNK-60)/nst);
+  var curY=.88;
+  for(var i=0;i<nst;i++){
+    var px=sx+30+i*sw;
+    var dy=i%2===0?-.06:.05;
+    curY=clamp(curY+dy,.50,.88);
+    plats.push({x:px,y:H*curY,w:sw+6,h:H*.16,col:C,col2:C2,top:T,goal:false,type:'s'});
+    for(var j=0;j<4;j++)coins.push(mkC(px+14+j*Math.floor(sw/4.2),H*(curY-.07)));
+    if(i>0&&Math.random()<.35+diff*.1)
+      enemies.push(mkE(px+sw/2,curY,i%2===0?'wasp':'crab'));
+    // emerald on every other step
+    if(i%2===1)coins.push(mkGem(px+sw/2,H*(curY-.12)));
+  }
+  return{plats:plats,enemies:enemies,coins:coins,w:CHNK};
+}
+
+// ── CHUNK TYPE 5: Aerial islands ────────────────────────────────
+function efAerial(sx,diff){
+  var C=efPalCol(0),C2=efPalCol(1),T=efPalCol(2);
+  var plats=[],enemies=[],coins=[];
+  plats.push({x:sx,y:H*.88,w:100,h:H*.14,col:C,col2:C2,top:T,goal:false,type:'s'});
+  plats.push({x:sx+CHNK-100,y:H*.88,w:100,h:H*.14,col:C,col2:C2,top:T,goal:false,type:'s'});
+  var ni=Math.min(7,3+Math.floor(diff*.6));
+  for(var i=0;i<ni;i++){
+    var t=(i+.5)/ni;
+    var ix=sx+100+t*(CHNK-200);
+    var iy=clamp(.42+Math.sin(i*1.7)*(.14),.34,.72);
+    plats.push({x:ix-60,y:H*iy,w:120,h:18,col:C,col2:C2,top:T,goal:false,type:'s'});
+    if(diff>1&&Math.random()<.4)enemies.push(mkE(ix,iy,'wasp'));
+    for(var j=0;j<4;j++)coins.push(mkC(ix-35+j*24,H*(iy-.07)));
+    coins.push(mkGem(ix,H*(iy-.12)));
+  }
+  coins.push(mkStar(sx+CHNK/2,H*.28));
+  return{plats:plats,enemies:enemies,coins:coins,w:CHNK};
+}
+
+// ── CHUNK TYPE 6: Speed run corridor ────────────────────────────
+function efSpeedRun(sx,diff){
+  var C=efPalCol(0),C2=efPalCol(1),T=efPalCol(2);
+  var plats=[],enemies=[],coins=[];
+  var cw=Math.floor(CHNK*1.3);
+  plats.push({x:sx,y:H*.87,w:cw,h:H*.16,col:C,col2:C2,top:T,goal:false,type:'s'});
+  var ne=Math.min(8,Math.floor(3+diff*1.6));
+  var gap=Math.floor((cw-120)/(ne+1));
+  for(var i=0;i<ne;i++){
+    enemies.push(mkE(sx+80+(i+1)*gap,.86,i%2===0?'crab':'bug'));
+    coins.push(mkC(sx+80+(i+1)*gap-25,H*.78));
+    coins.push(mkC(sx+80+(i+1)*gap+25,H*.78));
+  }
+  for(var i=0;i<18;i++)coins.push(mkC(sx+40+i*Math.floor(cw/19),H*.74));
+  // emerald trail along the sprint
+  for(var i=0;i<4;i++)coins.push(mkGem(sx+100+i*Math.floor(cw/5),H*.68));
+  coins.push(mkStar(sx+cw*.55,H*.60));
+  efRingRow(coins,sx+cw*.3,H*.72,3,44);
+  return{plats:plats,enemies:enemies,coins:coins,w:cw};
+}
+
+// ── CHUNK TYPE 7: Double hill (Sonic 2 style rolling terrain) ───
+function efDoubleHill(sx,diff){
+  var C=efPalCol(0),C2=efPalCol(1),T=efPalCol(2);
+  var plats=[],enemies=[],coins=[];
+  var cw=Math.floor(CHNK*1.2);
+  var p1=Math.max(.50,.72-diff*.03),p2=Math.max(.48,.68-diff*.03);
+  var hw=Math.floor(cw*.28);
+  // hill 1
+  pushSlope(plats,sx,.90,sx+hw,p1,12,C,C2,T);
+  plats.push({x:sx+hw,y:H*p1,w:50,h:H*.16,col:C,col2:C2,top:T,goal:false,type:'s'});
+  pushSlope(plats,sx+hw+50,p1,sx+hw*2,.88,10,C,C2,T);
+  // valley
+  plats.push({x:sx+hw*2,y:H*.88,w:80,h:H*.14,col:C,col2:C2,top:T,goal:false,type:'s'});
+  // hill 2
+  pushSlope(plats,sx+hw*2+80,.88,sx+hw*3+80,p2,14,C,C2,T);
+  plats.push({x:sx+hw*3+80,y:H*p2,w:50,h:H*.16,col:C,col2:C2,top:T,goal:false,type:'s'});
+  pushSlope(plats,sx+hw*3+130,p2,sx+cw,.90,12,C,C2,T);
+  // coins along both hills
+  efCoinArc(coins,sx+20,H*.86,sx+hw*2,H*.86,10);
+  efCoinArc(coins,sx+hw*2+80,H*.86,sx+cw-20,H*.86,10);
+  // emeralds on peaks
+  coins.push(mkGem(sx+hw+25,H*(p1-.10)));
+  coins.push(mkGem(sx+hw*3+105,H*(p2-.10)));
+  coins.push(mkGem(sx+hw*2+40,H*.78));
+  enemies.push(mkE(sx+hw*.5,.87,'bug'));
+  enemies.push(mkE(sx+hw*2+40,.87,'crab'));
+  if(diff>1)enemies.push(mkE(sx+hw*3+105,p2,'wasp'));
+  return{plats:plats,enemies:enemies,coins:coins,w:cw};
+}
+
+// ── CHUNK TYPE 8: Loop ramp (steep up then sharp down) ──────────
+function efLoopRamp(sx,diff){
+  var C=efPalCol(0),C2=efPalCol(1),T=efPalCol(2);
+  var plats=[],enemies=[],coins=[];
+  // approach flat
+  plats.push({x:sx,y:H*.88,w:180,h:H*.14,col:C,col2:C2,top:T,goal:false,type:'s'});
+  // steep ramp up
+  var topY=Math.max(.34,.52-diff*.04);
+  pushSlope(plats,sx+180,.88,sx+480,topY,18,C,C2,T);
+  // flat top
+  plats.push({x:sx+480,y:H*topY,w:140,h:H*.16,col:C,col2:C2,top:T,goal:false,type:'s'});
+  // steep drop
+  pushSlope(plats,sx+620,topY,sx+CHNK,.90,18,C,C2,T);
+  // emerald arc over the ramp
+  for(var i=0;i<5;i++){
+    var t=i/4;
+    coins.push(mkGem(sx+250+t*350,H*(topY-.06-Math.sin(t*3.14)*.12)));
+  }
+  efCoinArc(coins,sx+20,H*.82,sx+CHNK-20,H*.82,16);
+  coins.push(mkStar(sx+550,H*(topY-.18)));
+  enemies.push(mkE(sx+100,.87,'crab'));
+  if(diff>0.8)enemies.push(mkE(sx+550,topY,'wasp'));
+  return{plats:plats,enemies:enemies,coins:coins,w:CHNK};
+}
+
+// ── CHUNK TYPE 9: Emerald garden (flat with tons of gems) ───────
+function efEmeraldGarden(sx,diff){
+  var C=efPalCol(0),C2=efPalCol(1),T=efPalCol(2);
+  var plats=[],enemies=[],coins=[];
+  var cw=Math.floor(CHNK*1.1);
+  plats.push({x:sx,y:H*.87,w:cw,h:H*.16,col:C,col2:C2,top:T,goal:false,type:'s'});
+  // floating platform with emerald bonus
+  plats.push({x:sx+200,y:H*.62,w:160,h:16,col:C,col2:C2,top:T,goal:false,type:'s'});
+  plats.push({x:sx+500,y:H*.55,w:140,h:16,col:C,col2:C2,top:T,goal:false,type:'s'});
+  plats.push({x:sx+750,y:H*.62,w:160,h:16,col:C,col2:C2,top:T,goal:false,type:'s'});
+  // ground coins
+  for(var i=0;i<14;i++)coins.push(mkC(sx+40+i*Math.floor(cw/15),H*.78));
+  // EMERALD BONANZA - lots of gems!
+  for(var i=0;i<8;i++){
+    coins.push(mkGem(sx+80+i*Math.floor(cw/9),H*.72));
+  }
+  // sky emeralds on platforms
+  coins.push(mkGem(sx+280,H*.54));coins.push(mkGem(sx+570,H*.47));coins.push(mkGem(sx+830,H*.54));
+  coins.push(mkStar(sx+570,H*.40));
+  efRingRow(coins,sx+350,H*.74,3,50);
+  // light enemies
+  enemies.push(mkE(sx+300,.86,'bug'));
+  if(diff>1)enemies.push(mkE(sx+700,.86,'crab'));
+  return{plats:plats,enemies:enemies,coins:coins,w:cw};
+}
+
+// Chunk type table with weighted bands [diff<1, diff<2, diff<3, diff>=3]
+var CHTYPES=[
+  {fn:efFlat,          w:[40,20,12, 8]},
+  {fn:efHill,          w:[22,30,24,18]},
+  {fn:efBigHill,       w:[ 0,12,20,24]},
+  {fn:efValley,        w:[ 6,14,18,16]},
+  {fn:efSteps,         w:[ 5,14,18,20]},
+  {fn:efAerial,        w:[ 0, 6,14,18]},
+  {fn:efSpeedRun,      w:[ 6,16,20,26]},
+  {fn:efDoubleHill,    w:[12,22,22,20]},
+  {fn:efLoopRamp,      w:[ 0, 8,16,22]},
+  {fn:efEmeraldGarden, w:[14,18,16,12]},
+];
+
+function efPickChunk(diff){
+  var band=Math.min(3,Math.floor(diff));
+  var tot=0;for(var i=0;i<CHTYPES.length;i++)tot+=CHTYPES[i].w[band];
+  var r=Math.random()*tot,acc=0;
+  for(var i=0;i<CHTYPES.length;i++){acc+=CHTYPES[i].w[band];if(r<acc)return CHTYPES[i].fn;}
+  return efHill;
+}
+
+// Spawn chunks far enough ahead of player
+function efSpawn(){
+  var ef=G.ef,p=G.player;
+  var lookahead=W*2.8;
+  var playerX=p?p.x:0;
+  while(ef.spawnX < playerX+lookahead){
+    var diff=ef.dist/4000; // difficulty unit = 4000px
+    var fn=(ef.spawnX<900)?efFlat:efPickChunk(diff);
+    var chunk=fn(ef.spawnX,diff);
+    // terrain stitching: blend last platform y into first platform y
+    if(ef.chunks.length>0&&chunk.plats.length>0){
+      var lastP=ef.chunks[ef.chunks.length-1];
+      // find last ground plat from previous chunk
+      var prev=G.plats[G.plats.length-1];
+      var first=chunk.plats[0];
+      if(prev&&first&&first.type==='s'&&first.y>H*.5){
+        var dy=(prev.y)-(first.y);
+        if(Math.abs(dy)>H*.12){
+          var nudge=dy*.35;
+          for(var i=0;i<chunk.plats.length;i++){
+            if(chunk.plats[i].y>H*.4)chunk.plats[i].y+=nudge;
+          }
+          for(var i=0;i<chunk.enemies.length;i++){
+            if(chunk.enemies[i].y>H*.4)chunk.enemies[i].y+=nudge;
+            chunk.enemies[i].hy+=nudge;
+          }
+          for(var i=0;i<chunk.coins.length;i++){
+            if(chunk.coins[i].y>H*.4)chunk.coins[i].y+=nudge;
+          }
+        }
+      }
+    }
+    for(var i=0;i<chunk.plats.length;i++)G.plats.push(chunk.plats[i]);
+    for(var i=0;i<chunk.enemies.length;i++)G.enemies.push(chunk.enemies[i]);
+    for(var i=0;i<chunk.coins.length;i++)G.coins.push(chunk.coins[i]);
+    ef.chunks.push({x:ef.spawnX,w:chunk.w});
+    ef.spawnX+=chunk.w;
+  }
+}
+
+// Despawn chunks far behind player
+function efDespawn(){
+  var ef=G.ef,p=G.player;
+  var cullX=(p?p.x:0)-W*1.8;
+  while(ef.chunks.length>4 && ef.chunks[0].x+ef.chunks[0].w < cullX){
+    ef.chunks.shift();
+    var cx2=cullX;
+    G.plats =G.plats.filter(function(pl){return pl.x+pl.w>=cx2;});
+    G.enemies=G.enemies.filter(function(e){return e.x>=cx2;});
+    G.coins  =G.coins.filter(function(c){return c.x>=cx2;});
+  }
+}
+
+// Forever tick — runs every frame in lvl3
+function tickForever(){
+  var ef=G.ef,p=G.player;
+  if(!p||ef.dead)return;
+  // Distance
+  ef.dist+=Math.abs(p.vx)*.016;
+  // Speed ramp: +6% every 2000m, cap at 2.2x
+  ef.spd=Math.min(2.2, 1.0+Math.floor(ef.dist/2000)*.06);
+  // Palette shift every 4000m (8 palettes)
+  var newPal=Math.floor(ef.dist/4000)%8;
+  if(newPal!==ef.pal){ef.pal=newPal;popup('🌈 PALETTE SHIFT!',efPalCol(2));}
+  // Difficulty-milestone popups with encouraging messages
+  var distKm=Math.floor(ef.dist/1000);
+  var milKey='m'+distKm;
+  if(distKm>0&&!ef[milKey]){
+    ef[milKey]=true;
+    var msgs=['','🏃 1km! Keep going!','🔥 2km! Speed: ','⚡ 3km! Speed: ','💎 4km! Speed: ','🌟 5km! Speed: ','🏆 6km! Speed: ','👑 7km! Legendary!','🦑 8km! UNSTOPPABLE!'];
+    var msg=distKm<msgs.length?msgs[distKm]:(distKm+'km! Speed: ');
+    if(distKm>=2&&msg.indexOf('Speed')>0)msg+=ef.spd.toFixed(1)+'x';
+    popup(msg,efPalCol(2));
+  }
+  efSpawn();
+  efDespawn();
+  // Look-ahead camera: lead forward by velocity * lookahead factor
+  var camX=p.x-W*.28+Math.abs(p.vx)*14;
+  G.sx+=(camX-G.sx)*.08;
+  G.sx=Math.max(0,G.sx);
+  // Vertical smoothing: if player is near top/bottom of screen, nudge cam
+  // (not needed since camera is horizontal-only — vertical is world-space)
+  if(G.inv>0)G.inv--;
+  efUpdateHUD();
+  // Fall = run over
+  if(p.y>H+120)efRunOver();
+}
+
+// Build forever starting state
+function buildForever(){
+  G.plats=[];G.enemies=[];G.coins=[];G.vines=[];G.fogs=[];G.secrets=[];G.tut={};
+  var ef=G.ef;
+  ef.chunks=[];ef.spawnX=0;ef.dist=0;ef.emeralds=0;ef.spd=1;ef.pal=0;ef.dead=false;
+  try{ef.best=parseInt(localStorage.getItem('ghf_best')||'0');}catch(e){ef.best=0;}
+  G.clouds=[];
+  for(var i=0;i<48;i++)
+    G.clouds.push({x:i*200+rnd(-30,30),y:rnd(6,H*.52),w:rnd(50,210),h:rnd(18,82),spd:rnd(.06,.28),a:rnd(.25,.78),layer:i%3});
+  efSpawn();
+}
+
+// Run-over (death in endless)
+function efRunOver(){
+  var ef=G.ef; if(ef.dead)return; ef.dead=true;
+  var newBest=G.score>ef.best;
+  if(newBest){ef.best=G.score;try{localStorage.setItem('ghf_best',String(ef.best));}catch(e){}}
+  G.state='dead';
+  setTimeout(function(){efShowOver(newBest);},700);
+}
+
+function efShowOver(newBest){
+  var ef=G.ef;
+  var ov=document.getElementById('overlay');ov.style.display='flex';
+  var html='';
+  html+='<div style="font-size:58px;filter:drop-shadow(0 0 16px '+(newBest?'#0f8':'#888')+')">'+(newBest?'🏆':'💀')+'</div>';
+  html+='<h1 style="font:bold 36px Georgia,serif;margin:4px 0;color:'+(newBest?'#aaff44':'#ccffcc')+'">RUN OVER</h1>';
+  if(newBest)html+='<div style="font-size:14px;color:#aaff44;margin-bottom:6px;text-shadow:0 0 12px #0f4">✨ NEW BEST SCORE! ✨</div>';
+  html+='<div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin:6px 0 12px">';
+  html+='<div style="background:rgba(0,255,100,.08);border:1px solid #44ff88;border-radius:12px;padding:6px 14px;text-align:center"><div style="font-size:11px;color:#88aa88">DISTANCE</div><div style="font-size:18px;color:#88ff88">'+Math.floor(ef.dist)+'m</div></div>';
+  html+='<div style="background:rgba(255,220,0,.08);border:1px solid #ffdd44;border-radius:12px;padding:6px 14px;text-align:center"><div style="font-size:11px;color:#aa8844">SCORE</div><div style="font-size:18px;color:#ffdd44">'+G.score+'</div></div>';
+  html+='<div style="background:rgba(0,255,200,.08);border:1px solid #44ffcc;border-radius:12px;padding:6px 14px;text-align:center"><div style="font-size:11px;color:#44aa88">EMERALDS</div><div style="font-size:18px;color:#44ffcc">'+ef.emeralds+'</div></div>';
+  html+='</div>';
+  if(!newBest)html+='<div style="font-size:12px;color:#668866;margin-bottom:4px">Best: '+ef.best+'</div>';
+  html+='<div style="font-size:12px;color:#557755;margin-bottom:10px">Peak speed: '+ef.spd.toFixed(1)+'x</div>';
+  html+='<div class="btns">';
+  html+='<button class="btn bgf" onclick="startGame(3)">♾️ Run Again</button>';
+  html+='<button class="btn bgh" onclick="startGame(2)">🌿 GH Zone</button>';
+  html+='<button class="btn bsv" onclick="startGame(0)">🌴 Cyan Palm</button>';
+  html+='</div>';
+  ov.innerHTML=html;
+}
+
+// Endless HUD update
+function efUpdateHUD(){
+  var ef=G.ef;
+  document.getElementById('fhd').textContent='📏 '+Math.floor(ef.dist)+'m';
+  document.getElementById('fhs').textContent='⭐ '+G.score;
+  document.getElementById('fhe').textContent='💎 '+ef.emeralds;
+  var cx=G.combo>1?('x'+G.combo):'x1';
+  var cxEl=document.getElementById('fhx');
+  cxEl.textContent=cx+(ef.spd>1.05?' · '+ef.spd.toFixed(1)+'x':'');
+  cxEl.style.color=G.combo>5?'#ff4400':G.combo>2?'#ff8800':'#ffe000';
+  document.getElementById('fhb').textContent='🏆 '+ef.best;
+}
+
+// ── Green Hill Forever background — Sonic 2 inspired parallax ──
+function drawForeverBG(){
+  var ef=G.ef;
+  var pa=EF_PALS[ef.pal%8];
+  // ── SKY — rich multi-stop gradient ──────────────────────────
+  var sk=ctx.createLinearGradient(0,0,0,H);
+  sk.addColorStop(0,pa[5]);
+  sk.addColorStop(.10,pa[1]);
+  sk.addColorStop(.28,pa[6]||pa[1]);
+  sk.addColorStop(.50,pa[7]||pa[0]);
+  sk.addColorStop(.72,pa[0]);
+  sk.addColorStop(.88,pa[3]);
+  sk.addColorStop(1,pa[2]+'66');
+  ctx.fillStyle=sk; ctx.fillRect(0,0,W,H);
+
+  // ── ANIMATED STARS ──────────────────────────────────────────
+  for(var i=0;i<90;i++){
+    var stx=(i*1872937%W),sty=(i*977311%(H*.38));
+    var bl=.2+.8*((Math.sin(ef.dist*.0025+i*1.1)*.5+.5));
+    ctx.globalAlpha=bl*.60; ctx.fillStyle=i%4===0?'#ffffff':i%4===1?pa[2]:i%4===2?'#aaddff':'#ffeecc';
+    var sr=.3+((i*31)%4)*.35;
+    ctx.beginPath(); ctx.arc(stx,sty,sr,0,6.28); ctx.fill();
+    if(i%13===0){ctx.globalAlpha=bl*.15;ctx.beginPath();ctx.arc(stx,sty,sr*5,0,6.28);ctx.fill();}
+  }
+  ctx.globalAlpha=1;
+
+  // ── SUN — large retrowave orb ──────────────────────────────
+  var sx2=W*.5,sy2=H*.38,sr2=H*.20;
+  var sg=ctx.createRadialGradient(sx2,sy2,0,sx2,sy2,sr2*2.2);
+  sg.addColorStop(0,'rgba(255,255,255,.16)');sg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=sg;ctx.fillRect(0,0,W,H);
+  // outer halo rings
+  for(var r=3;r>=1;r--){
+    ctx.globalAlpha=.03+r*.018;
+    ctx.strokeStyle=pa[2];ctx.lineWidth=r*7;
+    ctx.beginPath();ctx.arc(sx2,sy2,sr2+r*20,0,6.28);ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+  // sun disc clipped
+  ctx.save(); ctx.beginPath(); ctx.arc(sx2,sy2,sr2,0,6.28); ctx.clip();
+  var sb=ctx.createLinearGradient(sx2,sy2-sr2,sx2,sy2+sr2);
+  sb.addColorStop(0,'#eefff8');sb.addColorStop(.25,pa[2]);sb.addColorStop(.55,pa[0]);sb.addColorStop(.80,pa[3]);sb.addColorStop(1,pa[1]);
+  ctx.fillStyle=sb;ctx.fillRect(sx2-sr2,sy2-sr2,sr2*2,sr2*2);
+  for(var s=0;s<10;s++){
+    var sgy=sy2+sr2*(.08+s*.085);
+    ctx.fillStyle='rgba(0,6,16,.78)';ctx.fillRect(sx2-sr2,sgy,sr2*2,Math.max(1.5,H*.010-s*.25));
+  }
+  ctx.restore();
+  ctx.globalAlpha=.65;ctx.strokeStyle=pa[2];ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.arc(sx2,sy2,sr2,0,6.28);ctx.stroke();ctx.globalAlpha=1;
+
+  // ── PERSPECTIVE GRID — Sonic 2 horizon lines ────────────────
+  var hz=sy2+sr2*.15;
+  ctx.save();
+  ctx.globalAlpha=.14;ctx.strokeStyle=pa[2];ctx.lineWidth=.7;
+  for(var gi=-14;gi<=14;gi++){
+    ctx.beginPath();ctx.moveTo(W*.5,hz);ctx.lineTo(W*.5+gi*(W*.5/14),H);ctx.stroke();
+  }
+  ctx.globalAlpha=.07;ctx.strokeStyle=pa[3];ctx.lineWidth=.6;
+  for(var gj=1;gj<=12;gj++){
+    var t=gj/12,gy=hz+(H-hz)*t*t;
+    ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();
+  }
+  ctx.restore();ctx.globalAlpha=1;
+
+  // ── PARALLAX HILLS — 5 layers like Sonic 2 ────────────────
+  var ox1=G.sx*.03,ox2=G.sx*.07,ox3=G.sx*.14,ox4=G.sx*.26,ox5=G.sx*.42;
+  efHillLayer(ox1,H*.56,pa[1],H*.44);
+  efHillLayer(ox2,H*.62,pa[4],H*.38);
+  efHillLayer(ox3,H*.69,pa[0]+'cc',H*.32);
+  efHillLayer(ox4,H*.75,pa[3]+'cc',H*.26);
+  efHillLayer(ox5,H*.80,pa[2]+'66',H*.20);
+
+  // ── ANIMATED WATER / LAKE BAND ─────────────────────────────
+  var waterY=H*.78;
+  var wg=ctx.createLinearGradient(0,waterY,0,waterY+H*.06);
+  wg.addColorStop(0,pa[2]+'44');wg.addColorStop(.5,pa[0]+'33');wg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=wg;ctx.fillRect(0,waterY,W,H*.06);
+  // shimmer ripples
+  ctx.globalAlpha=.18;ctx.strokeStyle=pa[2];ctx.lineWidth=1;
+  for(var w=0;w<12;w++){
+    var wx=((w*120+G.frame*1.2-G.sx*.3+12000)%(W+160))-80;
+    var wy=waterY+8+Math.sin(G.frame*.06+w*1.3)*4;
+    ctx.beginPath();ctx.moveTo(wx,wy);ctx.quadraticCurveTo(wx+30,wy-3,wx+60,wy);ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+
+  // ── LAYERED CLOUDS — 3 parallax depths ──────────────────────
+  for(var i=0;i<G.clouds.length;i++){
+    var c=G.clouds[i];
+    var par=c.layer===0?.04:c.layer===1?.10:.18;
+    var cx=((c.x-G.sx*par+12000)%(W+c.w+600))-c.w;
+    ctx.globalAlpha=c.a*(c.layer===0?.40:c.layer===1?.55:.72);
+    ctx.fillStyle=c.layer===0?(pa[7]||pa[2]+'88'):c.layer===1?'rgba(255,255,255,.85)':pa[2]+'aa';
+    puffCloud(cx,c.y,c.w,c.h);
+  }
+  ctx.globalAlpha=1;
+
+  // ── FOREGROUND PALM TREES ──────────────────────────────────
+  efDrawPalms(G.sx*.48,pa);
+
+  // ── GRASS BUMPS — 3 layered rows ──────────────────────────
+  ctx.fillStyle=pa[0]+'cc';
+  for(var i=0;i<18;i++){var gx=((i*262-(G.sx*.55|0)+262*24)%(W+290))-145;ctx.beginPath();ctx.ellipse(gx,H*.852,165+(i*41)%80,62+(i*27)%30,0,Math.PI,0);ctx.fill();}
+  ctx.fillStyle=pa[3]+'cc';
+  for(var i=0;i<13;i++){var gx=((i*328+130-(G.sx*.70|0)+328*20)%(W+350))-175;ctx.beginPath();ctx.ellipse(gx,H*.852,120+(i*37)%58,48+(i*21)%24,0,Math.PI,0);ctx.fill();}
+  ctx.fillStyle=pa[2]+'88';
+  for(var i=0;i<9;i++){var gx=((i*400+240-(G.sx*.88|0)+400*18)%(W+430))-215;ctx.beginPath();ctx.ellipse(gx,H*.852,92+(i*31)%42,38+(i*19)%18,0,Math.PI,0);ctx.fill();}
+
+  // ── GROUND — rich layered earth ────────────────────────────
+  var gnd=ctx.createLinearGradient(0,H*.84,0,H);
+  gnd.addColorStop(0,pa[2]);gnd.addColorStop(.05,pa[0]);
+  gnd.addColorStop(.25,pa[1]);gnd.addColorStop(.60,pa[4]);gnd.addColorStop(1,pa[5]);
+  ctx.fillStyle=gnd;ctx.fillRect(0,H*.84,W,H*.16);
+  // neon ground stripes (Sonic 2 checkerboard feel)
+  ctx.fillStyle=pa[2];ctx.fillRect(0,H*.852,W,3);
+  ctx.fillStyle=pa[3];ctx.fillRect(0,H*.866,W,2);
+  ctx.fillStyle=pa[0];ctx.fillRect(0,H*.878,W,1.5);
+  // ground glow
+  var gglow=ctx.createLinearGradient(0,H*.82,0,H*.86);
+  gglow.addColorStop(0,'rgba(0,0,0,0)');gglow.addColorStop(1,pa[2]+'33');
+  ctx.fillStyle=gglow;ctx.fillRect(0,H*.82,W,H*.05);
+
+  // ── GROUND FLOWERS / DOTS ──────────────────────────────────
+  for(var i=0;i<52;i++){
+    var fx=((i*48-(G.sx*.72|0)+48*240)%(W+52))-26;
+    ctx.fillStyle=i%4===0?pa[2]:i%4===1?pa[0]:i%4===2?'#ffffff':pa[3];
+    ctx.globalAlpha=.72;ctx.beginPath();ctx.arc(fx,H*.848,2.8,0,6.28);ctx.fill();
+    if(i%6===0){
+      // little sunflowers
+      ctx.globalAlpha=.55;ctx.fillStyle='#ffdd44';
+      ctx.beginPath();ctx.arc(fx,H*.843,4.5,0,6.28);ctx.fill();
+      ctx.fillStyle='#885500';ctx.beginPath();ctx.arc(fx,H*.843,2,0,6.28);ctx.fill();
+    }
+  }
+  ctx.globalAlpha=1;
+
+  // ── HORIZON ATMOSPHERIC GLOW ──────────────────────────────
+  var hg=ctx.createLinearGradient(0,H*.54,0,H*.68);
+  hg.addColorStop(0,'rgba(0,0,0,0)');hg.addColorStop(.5,pa[2]+'18');hg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=hg;ctx.fillRect(0,H*.54,W,H*.14);
+}
+
+// Palm trees for forever mode
+function efDrawPalms(off,pa){
+  for(var i=0;i<10;i++){
+    var tx=((i*420-off+420*24)%(W+440))-100;
+    var ty=H*.852,th=68+(i*29)%48;
+    ctx.save();ctx.translate(tx,ty);
+    // trunk
+    ctx.globalAlpha=.18;ctx.fillStyle=pa[2];ctx.fillRect(-10,-th,20,th);ctx.globalAlpha=1;
+    ctx.fillStyle=pa[1];ctx.fillRect(-4,-th,8,th);
+    ctx.fillStyle=pa[4];ctx.fillRect(-2,-th,4,th);
+    // trunk rings
+    ctx.fillStyle=pa[2];for(var r=0;r<4;r++)ctx.fillRect(-4,-th*.22*r-8,8,2);
+    ctx.restore();
+    // fronds
+    var fx=tx,fy=ty-th;
+    ctx.globalAlpha=.22;
+    for(var f=0;f<7;f++){var fa=f*(6.28/7)-1.1;ctx.save();ctx.translate(fx,fy);ctx.rotate(fa);ctx.fillStyle=f%2===0?pa[2]:pa[0];ctx.beginPath();ctx.moveTo(0,0);ctx.bezierCurveTo(8,-10,28,-18,58,-10);ctx.bezierCurveTo(28,-3,8,1,0,0);ctx.fill();ctx.restore();}
+    ctx.globalAlpha=1;
+    for(var f=0;f<7;f++){var fa=f*(6.28/7)-1.1;ctx.save();ctx.translate(fx,fy);ctx.rotate(fa);ctx.fillStyle=f%2===0?pa[0]:pa[4];ctx.beginPath();ctx.moveTo(0,0);ctx.bezierCurveTo(8,-8,26,-13,54,-7);ctx.bezierCurveTo(26,-1,8,2,0,0);ctx.fill();ctx.restore();}
+    // coconut-like dots
+    ctx.globalAlpha=.70;ctx.fillStyle=pa[2];ctx.beginPath();ctx.arc(fx,fy,4,0,6.28);ctx.fill();ctx.globalAlpha=1;
+    ctx.fillStyle=i%2===0?pa[2]:pa[3];ctx.beginPath();ctx.arc(fx+5,fy+4,5,0,6.28);ctx.fill();
+    ctx.beginPath();ctx.arc(fx-4,fy+6,4,0,6.28);ctx.fill();
+  }
+}
+
+function efHillLayer(off,baseY,col,hRange){
+  ctx.fillStyle=col;
+  for(var i=0;i<14;i++){
+    var mx=((i*540-off+7560)%7560)-200;
+    var mw=300+(i*79)%230;
+    var mh=hRange*(.35+(i*47)%62/100);
+    ctx.beginPath();ctx.moveTo(mx,baseY);
+    ctx.bezierCurveTo(mx+mw*.22,baseY-mh,mx+mw*.78,baseY-mh,mx+mw,baseY);
+    ctx.closePath();ctx.fill();
+  }
+}
+
+// Speed lines — horizontal streaks in screen space when moving fast
+function drawSpeedLines(){
+  var p=G.player; if(!p)return;
+  var spd=Math.abs(p.vx||0)-7;
+  if(spd<=0)return;
+  var t=Math.min(1,spd/6);
+  ctx.save();
+  ctx.globalAlpha=t*.18;
+  ctx.strokeStyle=efPalCol(2); ctx.lineWidth=1;
+  for(var i=0;i<18;i++){
+    var lx=((i*(W/18)+G.frame*Math.abs(p.vx)*.65)%(W+80))-40;
+    var ly=H*.12+i*(H*.76/18);
+    var len=50+t*140+rnd(0,50);
+    ctx.beginPath(); ctx.moveTo(lx,ly); ctx.lineTo(lx-len,ly+rnd(-3,3)); ctx.stroke();
+  }
+  ctx.restore(); ctx.globalAlpha=1;
+}
+
+function drawMtns(off,baseY,col,hR){ctx.fillStyle=col;for(var i=0;i<12;i++){var mx=((i*500-off+6000)%6000)-200,mw=380+(i*71)%210,mh=hR*(.38+(i*39)%60/100);ctx.beginPath();ctx.moveTo(mx,baseY);ctx.bezierCurveTo(mx+mw*.22,baseY-mh,mx+mw*.78,baseY-mh,mx+mw,baseY);ctx.closePath();ctx.fill();}}
+function drawAcacias(off,col,sc){for(var i=0;i<20;i++){var ax=((i*300-off+6000)%6000)-80,ay=H*(.73-(i%4)*.012);ctx.save();ctx.translate(ax,ay);ctx.scale(sc,sc);ctx.fillStyle=col;ctx.fillRect(-4,-72,8,72);ctx.fillRect(-4,-56,24,5);ctx.beginPath();ctx.ellipse(0,-80,54,20,0,0,6.28);ctx.fill();ctx.beginPath();ctx.ellipse(-22,-84,30,13,-.3,0,6.28);ctx.fill();ctx.beginPath();ctx.ellipse(24,-82,27,12,.3,0,6.28);ctx.fill();ctx.restore();}}
+function drawPines(off,baseY,col,density){ctx.fillStyle=col;var count=Math.ceil(14*density),spacing=Math.max(150,270/density),total=spacing*(count+3);for(var i=0;i<=count+2;i++){var tx=((i*spacing-off%total+total)%total)-100,th=baseY*(.26+(i*31)%44/100),tw=52+(i*19)%40;ctx.beginPath();ctx.moveTo(tx,baseY-th);ctx.lineTo(tx-tw*.52,baseY);ctx.lineTo(tx+tw*.52,baseY);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(tx,baseY-th*1.1);ctx.lineTo(tx-tw*.44,baseY-th*.35);ctx.lineTo(tx+tw*.44,baseY-th*.35);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(tx,baseY-th*1.28);ctx.lineTo(tx-tw*.3,baseY-th*.63);ctx.lineTo(tx+tw*.3,baseY-th*.63);ctx.closePath();ctx.fill();}}
+function drawClouds(col,parallax,isGH){
+  if(isGH)return; // GH has its own cloud system
+  for(var i=0;i<G.clouds.length;i++){var c=G.clouds[i],cx=((c.x-G.sx*parallax+LW*6)%(LW+c.w+400))-c.w,scx=cx*(W/LW);ctx.globalAlpha=c.a*.8;ctx.fillStyle=col;puffCloud(scx,c.y,c.w,c.h);}
+  ctx.globalAlpha=1;
+}
+function puffCloud(x,y,w,h){ctx.beginPath();ctx.ellipse(x+w*.5,y+h*.62,w*.5,h*.45,0,0,6.28);ctx.fill();ctx.beginPath();ctx.ellipse(x+w*.28,y+h*.46,w*.28,h*.38,0,0,6.28);ctx.fill();ctx.beginPath();ctx.ellipse(x+w*.72,y+h*.42,w*.26,h*.34,0,0,6.28);ctx.fill();}
+
+// ── Windmills ─────────────────────────────────────────────
+function drawMills(){
+  for(var m=0;m<G.mills.length;m++){
+    var wx=G.mills[m].x,wy=G.mills[m].y;
+    ctx.save();ctx.fillStyle='#b8d098';ctx.beginPath();ctx.moveTo(wx-20,wy);ctx.lineTo(wx+20,wy);ctx.lineTo(wx+12,wy-140);ctx.lineTo(wx-12,wy-140);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='#7a9860';ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle='#d8f0b0';ctx.fillRect(wx-7,wy-55,14,18);ctx.fillRect(wx-7,wy-88,14,18);
+    var ang=G.frame*.02,hx=wx,hy=wy-140;
+    for(var b=0;b<4;b++){ctx.save();ctx.translate(hx,hy);ctx.rotate(ang+b*1.5708);ctx.fillStyle='#e2f2c8';ctx.strokeStyle='#7a9860';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-4,0);ctx.bezierCurveTo(-12,-20,-10,-55,0,-68);ctx.bezierCurveTo(10,-55,12,-20,4,0);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();}
+    ctx.fillStyle='#8aaa60';ctx.beginPath();ctx.arc(hx,hy,10,0,6.28);ctx.fill();ctx.fillStyle='#3a5520';ctx.beginPath();ctx.arc(hx,hy,5,0,6.28);ctx.fill();ctx.restore();
+  }
+}
+
+// ── Platforms ─────────────────────────────────────────────
+function drawPlats(){
+  for(var i=0;i<G.plats.length;i++){
+    var p=G.plats[i];
+    if(p.x-G.sx+p.w<-20||p.x-G.sx>W+20)continue;
+    if(p.goal){
+      ctx.fillStyle=G.lvl===2?'#3a6622':'#c8a000';ctx.fillRect(p.x,p.y,p.w,p.h);
+      ctx.globalAlpha=.45+Math.sin(G.frame*.1)*.45;
+      ctx.fillStyle=G.lvl===2?'#88ff44':'#ffe060';ctx.fillRect(p.x-3,p.y-4,p.w+6,10);ctx.globalAlpha=1;
+      ctx.fillStyle=G.lvl===2?'#eeeedd':'#e8e8e8';ctx.fillRect(p.x+p.w/2-3,p.y-130,6,130);
+      var fw=38+Math.sin(G.frame*.13)*9;
+      ctx.fillStyle=G.lvl===2?'#ff2200':'#ff2200';
+      ctx.beginPath();ctx.moveTo(p.x+p.w/2+3,p.y-130);ctx.quadraticCurveTo(p.x+p.w/2+3+fw*.5,p.y-113,p.x+p.w/2+3+fw,p.y-107);ctx.quadraticCurveTo(p.x+p.w/2+3+fw*.5,p.y-94,p.x+p.w/2+3,p.y-88);ctx.closePath();ctx.fill();
+      if(G.lvl===2){
+        ctx.globalAlpha=.25+Math.sin(G.frame*.08)*.25;
+        var gg=ctx.createRadialGradient(p.x+p.w/2,p.y-110,0,p.x+p.w/2,p.y-110,70);
+        gg.addColorStop(0,'rgba(100,255,80,.9)');gg.addColorStop(1,'rgba(100,255,80,0)');
+        ctx.fillStyle=gg;ctx.fillRect(p.x+p.w/2-80,p.y-180,160,130);ctx.globalAlpha=1;
+      }
+      ctx.fillStyle=G.lvl===2?'#66ee44':'#ffe';ctx.font='bold 13px Georgia,serif';ctx.textAlign='center';
+      ctx.fillText(G.lvl===2?'GREEN HILL':'FINISH',p.x+p.w/2+20,p.y-100);
+      continue;
+    }
+    var pg=ctx.createLinearGradient(p.x,p.y,p.x,p.y+p.h);pg.addColorStop(0,p.col);pg.addColorStop(1,p.col2);
+    ctx.fillStyle=pg;ctx.fillRect(p.x,p.y,p.w,p.h);
+    if(G.lvl===0){
+      // Cyan Palm: chrome teal checker
+      var sq2=18;ctx.globalAlpha=.38;
+      for(var gx=p.x;gx<p.x+p.w;gx+=sq2){var ci=Math.floor((gx-p.x)/sq2);ctx.fillStyle=ci%2===0?'#00ffee':'#005566';ctx.fillRect(gx,p.y,sq2,Math.min(9,p.h*.4));}
+      ctx.globalAlpha=.65;ctx.strokeStyle='#00ffee';ctx.lineWidth=1.5;ctx.strokeRect(p.x,p.y,p.w,p.h);
+      ctx.globalAlpha=.18;var eg=ctx.createLinearGradient(p.x,p.y,p.x,p.y+10);eg.addColorStop(0,'#00ffee');eg.addColorStop(1,'rgba(0,255,238,0)');ctx.fillStyle=eg;ctx.fillRect(p.x,p.y,p.w,10);
+      ctx.globalAlpha=1;
+    }else if(G.lvl===1){
+      // Emerald Forest: emerald-black checker + turquoise glow
+      var sq2=18;ctx.globalAlpha=.42;
+      for(var gx=p.x;gx<p.x+p.w;gx+=sq2){var ci=Math.floor((gx-p.x)/sq2);ctx.fillStyle=ci%2===0?'#00ffaa':'#001a0a';ctx.fillRect(gx,p.y,sq2,Math.min(9,p.h*.4));}
+      ctx.globalAlpha=.65;ctx.strokeStyle='#00ffcc';ctx.lineWidth=1.5;ctx.strokeRect(p.x,p.y,p.w,p.h);
+      ctx.globalAlpha=.18;var eg=ctx.createLinearGradient(p.x,p.y,p.x,p.y+10);eg.addColorStop(0,'#00ffaa');eg.addColorStop(1,'rgba(0,255,170,0)');ctx.fillStyle=eg;ctx.fillRect(p.x,p.y,p.w,10);
+      ctx.globalAlpha=1;
+    }else if(G.lvl===3){
+      // Forever: Sonic 2 style checkerboard pattern
+      var sq2=18;ctx.globalAlpha=.45;
+      for(var gx=p.x;gx<p.x+p.w;gx+=sq2){
+        var ci=Math.floor((gx-p.x)/sq2);
+        var cj=Math.floor((p.y)/sq2);
+        if((ci+cj)%2===0){ctx.fillStyle=efPalCol(2);ctx.fillRect(gx,p.y,sq2,Math.min(10,p.h*.4));}
+        else{ctx.fillStyle=efPalCol(1);ctx.fillRect(gx,p.y,sq2,Math.min(10,p.h*.4));}
+      }
+      ctx.globalAlpha=.65;ctx.strokeStyle=efPalCol(2);ctx.lineWidth=1.8;
+      ctx.strokeRect(p.x,p.y,p.w,p.h);
+      ctx.globalAlpha=.25;
+      var eg=ctx.createLinearGradient(p.x,p.y,p.x,p.y+14);
+      eg.addColorStop(0,efPalCol(2));eg.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=eg;ctx.fillRect(p.x,p.y,p.w,14);
+      ctx.globalAlpha=1;
+    }else{
+      // GHZ: brown soil + green top Sonic checkerboard
+      var sq2=16;ctx.globalAlpha=.48;
+      for(var gx=p.x;gx<p.x+p.w;gx+=sq2){var ci=Math.floor((gx-p.x)/sq2);ctx.fillStyle=ci%2===0?'#CC7733':'#884422';ctx.fillRect(gx,p.y,sq2,Math.min(10,p.h*.45));}
+      ctx.globalAlpha=.70;ctx.strokeStyle='#44bb33';ctx.lineWidth=1.5;ctx.strokeRect(p.x,p.y,p.w,p.h);
+      ctx.globalAlpha=.22;var eg=ctx.createLinearGradient(p.x,p.y,p.x,p.y+10);eg.addColorStop(0,'#66dd44');eg.addColorStop(1,'rgba(100,220,68,0)');ctx.fillStyle=eg;ctx.fillRect(p.x,p.y,p.w,10);
+      ctx.globalAlpha=1;
+    }
+    // grass / top decoration
+    var grassC=p.top||(G.lvl===3?efPalCol(2):G.lvl===0?'#00ffee':G.lvl===1?'#44ffaa':'#66dd44');
+    ctx.fillStyle=grassC;
+    for(var gx=p.x;gx<p.x+p.w;gx+=12){var h1=7+(gx*7)%5,h2=5+(gx*13)%5;ctx.fillRect(gx,p.y-h1+2,5,h1);ctx.fillRect(gx+6,p.y-h2+2,4,h2);}
+    var darkG=G.lvl===0?'#00aabb':G.lvl===1?'#009966':G.lvl===2?'#228833':'#00cc99';
+    ctx.fillStyle=darkG;
+    for(var gx=p.x;gx<p.x+p.w;gx+=12){ctx.fillRect(gx+1,p.y-5,3,3);ctx.fillRect(gx+7,p.y-3,3,2);}
+  }
+}
+
+// ── Coins / Collectibles ──────────────────────────────────
+function drawCoins(){
+  for(var i=0;i<G.coins.length;i++){
+    var b=G.coins[i];if(b.col)continue;
+    var bx=b.x-G.sx;if(bx<-50||bx>W+50)continue;
+    var by=b.y+Math.sin(b.bob)*5;
+
+    if(b.star){
+      // SECRET STAR — bright yellow pulsing star shape
+      var pulse=.85+Math.sin(G.frame*.08+i)*.15;
+      ctx.globalAlpha=.4+Math.sin(b.bob)*.2;
+      ctx.fillStyle='rgba(255,240,0,.6)';ctx.beginPath();ctx.arc(b.x,by,20,0,6.28);ctx.fill();
+      ctx.globalAlpha=1;
+      ctx.save();ctx.translate(b.x,by);ctx.rotate(G.frame*.03);ctx.scale(pulse,pulse);
+      ctx.fillStyle='#fffb00';
+      drawStar5(0,0,13,7);
+      ctx.fillStyle='rgba(255,255,200,.6)';
+      drawStar5(0,0,16,10);
+      ctx.restore();
+      // shimmer
+      ctx.globalAlpha=.6+Math.sin(G.frame*.12+i)*.4;ctx.strokeStyle='#fffb00';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.moveTo(b.x-18,by);ctx.lineTo(b.x+18,by);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(b.x,by-18);ctx.lineTo(b.x,by+18);ctx.stroke();
+      ctx.globalAlpha=1;
+
+    }else if(b.gem){
+      // EMERALD GEM — teal diamond
+      ctx.globalAlpha=.32+Math.sin(b.bob)*.15;
+      ctx.fillStyle='rgba(0,255,180,.5)';ctx.beginPath();ctx.arc(b.x,by,15,0,6.28);ctx.fill();ctx.globalAlpha=1;
+      ctx.save();ctx.translate(b.x,by);
+      ctx.fillStyle='#00cc99';ctx.beginPath();ctx.moveTo(0,-12);ctx.lineTo(10,0);ctx.lineTo(0,12);ctx.lineTo(-10,0);ctx.closePath();ctx.fill();
+      ctx.fillStyle='#00ffcc';ctx.beginPath();ctx.moveTo(0,-12);ctx.lineTo(5,-3);ctx.lineTo(0,-7);ctx.lineTo(-5,-3);ctx.closePath();ctx.fill();
+      ctx.globalAlpha=.5;ctx.strokeStyle='#aaffee';ctx.lineWidth=1.8;
+      ctx.beginPath();ctx.moveTo(0,-12);ctx.lineTo(10,0);ctx.lineTo(0,12);ctx.lineTo(-10,0);ctx.closePath();ctx.stroke();
+      ctx.restore();
+
+    }else if(b.ring){
+      // RING — spinning hot pink
+      var spin=Math.abs(Math.sin(G.frame*.12+i));
+      ctx.globalAlpha=.35+Math.sin(b.bob)*.18;
+      var rg=ctx.createRadialGradient(b.x,by,0,b.x,by,20);
+      rg.addColorStop(0,'rgba(255,0,136,.5)');rg.addColorStop(1,'rgba(255,0,136,0)');
+      ctx.fillStyle=rg;ctx.beginPath();ctx.arc(b.x,by,20,0,6.28);ctx.fill();ctx.globalAlpha=1;
+      ctx.save();ctx.translate(b.x,by);
+      ctx.strokeStyle='#ff0088';ctx.lineWidth=4;
+      ctx.beginPath();ctx.ellipse(0,0,12,12*spin+1,0,0,6.28);ctx.stroke();
+      ctx.strokeStyle='rgba(255,180,220,.5)';ctx.lineWidth=2;
+      ctx.beginPath();ctx.ellipse(0,0,15,15*spin+1,0,0,6.28);ctx.stroke();
+      ctx.restore();
+
+    }else{
+      // NORMAL COIN — spinning cyan gem (GHZ), banana (other)
+      if(G.lvl===2){
+        ctx.globalAlpha=.28+Math.sin(b.bob)*.12;
+        ctx.fillStyle='rgba(0,220,255,.4)';ctx.beginPath();ctx.arc(b.x,by,12,0,6.28);ctx.fill();ctx.globalAlpha=1;
+        ctx.save();ctx.translate(b.x,by);
+        var sp2=Math.abs(Math.sin(G.frame*.1+i));
+        ctx.strokeStyle='#00ccff';ctx.lineWidth=3;
+        ctx.beginPath();ctx.ellipse(0,0,9,9*sp2+.5,0,0,6.28);ctx.stroke();
+        ctx.restore();
+      }else{
+        ctx.globalAlpha=.28+Math.sin(b.bob)*.15;ctx.fillStyle='#ffe000';ctx.beginPath();ctx.arc(b.x,by,13,0,6.28);ctx.fill();ctx.globalAlpha=1;
+        ctx.save();ctx.translate(b.x,by);ctx.rotate(-.26);ctx.fillStyle='#ffe000';ctx.strokeStyle='#c0a000';ctx.lineWidth=1.2;ctx.beginPath();ctx.ellipse(0,0,5.5,13,.28,0,6.28);ctx.fill();ctx.stroke();ctx.fillStyle='#6a4c00';ctx.fillRect(-2,-14,4,5);ctx.restore();
+      }
+    }
+  }
+}
+
+// Draw a 5-pointed star
+function drawStar5(x,y,outerR,innerR){
+  ctx.beginPath();
+  for(var pt=0;pt<10;pt++){
+    var angle=pt*Math.PI/5-Math.PI/2;
+    var r=pt%2===0?outerR:innerR;
+    if(pt===0)ctx.moveTo(x+r*Math.cos(angle),y+r*Math.sin(angle));
+    else ctx.lineTo(x+r*Math.cos(angle),y+r*Math.sin(angle));
+  }
+  ctx.closePath();ctx.fill();
+}
+
+// ── Enemies ───────────────────────────────────────────────
+function drawEnemies(){
+  for(var i=0;i<G.enemies.length;i++){
+    var e=G.enemies[i];if(!e.alive)continue;
+    var ex=e.x-G.sx;if(ex<-100||ex>W+100)continue;
+    ctx.save();ctx.translate(e.x+e.w/2,e.y+e.h/2);if(!e.fr)ctx.scale(-1,1);
+    if(e.kind==='boar')dBoar(e);
+    else if(e.kind==='rhino')dRhino(e);
+    else if(e.kind==='frog')dFrog(e);
+    else if(e.kind==='owl')dOwl(e);
+    else if(e.kind==='bug')dBug(e);
+    else if(e.kind==='crab')dCrab(e);
+    else if(e.kind==='wasp')dWasp(e);
+    ctx.restore();
+  }
+}
+
+function dBoar(e){var t=Math.sin(e.af*.9)*2;ctx.fillStyle='#8b3c1c';ctx.beginPath();ctx.ellipse(0,t,20,14,0,0,6.28);ctx.fill();ctx.fillStyle='#a55030';ctx.beginPath();ctx.ellipse(16,2+t,12,8.5,0,0,6.28);ctx.fill();ctx.fillStyle='#bf7250';ctx.beginPath();ctx.ellipse(26,3+t,8,6,0,0,6.28);ctx.fill();ctx.fillStyle='#5c2808';ctx.beginPath();ctx.arc(23,2.5+t,2,0,6.28);ctx.fill();ctx.beginPath();ctx.arc(28,2.5+t,2,0,6.28);ctx.fill();ctx.fillStyle='#f0f0d8';ctx.beginPath();ctx.moveTo(23,7+t);ctx.lineTo(31,10+t);ctx.lineTo(27,3+t);ctx.closePath();ctx.fill();ctx.fillStyle='#ff1a00';ctx.beginPath();ctx.arc(20,-1+t,4,0,6.28);ctx.fill();ctx.fillStyle='#000';ctx.beginPath();ctx.arc(21,-1+t,2,0,6.28);ctx.fill();ctx.fillStyle='#6a2c0e';var ls=Math.sin(e.af*1.6)*8;ctx.fillRect(-13,11+t,8,12+ls*.3);ctx.fillRect(-2,11+t,8,12-ls*.3);ctx.fillRect(8,11+t,8,12+ls*.3);}
+function dRhino(e){var t=Math.sin(e.af)*2;ctx.fillStyle='#545464';ctx.beginPath();ctx.ellipse(0,t,25,18,0,0,6.28);ctx.fill();ctx.fillStyle='#747480';ctx.beginPath();ctx.ellipse(21,3+t,17,13,0,0,6.28);ctx.fill();ctx.fillStyle='#909098';ctx.beginPath();ctx.arc(33,6+t,10,0,6.28);ctx.fill();ctx.fillStyle='#e8e8cc';ctx.beginPath();ctx.moveTo(41,0+t);ctx.lineTo(56,-7+t);ctx.lineTo(42,8+t);ctx.closePath();ctx.fill();ctx.fillStyle='#d0d0b0';ctx.beginPath();ctx.moveTo(36,2+t);ctx.lineTo(48,-2+t);ctx.lineTo(38,8+t);ctx.closePath();ctx.fill();ctx.fillStyle='#f00';ctx.beginPath();ctx.arc(26,-2+t,5,0,6.28);ctx.fill();ctx.fillStyle='#000';ctx.beginPath();ctx.arc(27,-2+t,2.8,0,6.28);ctx.fill();ctx.fillStyle='#44445c';var ls=Math.sin(e.af*1.3)*6;ctx.fillRect(-15,14+t,10,14+ls);ctx.fillRect(-3,14+t,10,14-ls);ctx.fillRect(9,14+t,10,14+ls);ctx.fillRect(20,14+t,10,14-ls);}
+function dFrog(e){var bob=Math.sin(G.frame*.09)*4;ctx.fillStyle='#20b82a';ctx.beginPath();ctx.ellipse(0,bob,18,14,0,0,6.28);ctx.fill();ctx.fillStyle='#189a20';ctx.beginPath();ctx.ellipse(0,-7+bob,16,9.5,0,0,6.28);ctx.fill();ctx.fillStyle='#c8f0c8';ctx.beginPath();ctx.ellipse(0,3+bob,11,7,0,0,6.28);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-8,-11+bob,6,0,6.28);ctx.fill();ctx.beginPath();ctx.arc(8,-11+bob,6,0,6.28);ctx.fill();ctx.fillStyle='#0a1a00';ctx.beginPath();ctx.arc(-8,-11+bob,3.5,0,6.28);ctx.fill();ctx.beginPath();ctx.arc(8,-11+bob,3.5,0,6.28);ctx.fill();ctx.strokeStyle='#0a6015';ctx.lineWidth=4;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-15,6+bob);ctx.lineTo(-24,18+bob);ctx.lineTo(-14,20+bob);ctx.stroke();ctx.beginPath();ctx.moveTo(15,6+bob);ctx.lineTo(24,18+bob);ctx.lineTo(14,20+bob);ctx.stroke();}
+function dOwl(e){var wf=Math.sin(G.frame*.12)*11;ctx.fillStyle='#5a3828';ctx.beginPath();ctx.ellipse(-24,wf,16,7.5,-.4,0,6.28);ctx.fill();ctx.beginPath();ctx.ellipse(24,wf,16,7.5,.4,0,6.28);ctx.fill();ctx.fillStyle='#7a5032';ctx.beginPath();ctx.ellipse(0,5,16,20,0,0,6.28);ctx.fill();ctx.fillStyle='#b08860';ctx.beginPath();ctx.ellipse(0,9,10,13,0,0,6.28);ctx.fill();ctx.fillStyle='#7a5032';ctx.beginPath();ctx.ellipse(0,-12,14,13,0,0,6.28);ctx.fill();ctx.fillStyle='#5a2c1a';ctx.beginPath();ctx.moveTo(-8,-22);ctx.lineTo(-11,-35);ctx.lineTo(-4,-23);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(8,-22);ctx.lineTo(11,-35);ctx.lineTo(4,-23);ctx.closePath();ctx.fill();ctx.fillStyle='#c89c6a';ctx.beginPath();ctx.ellipse(0,-12,11,10,0,0,6.28);ctx.fill();ctx.fillStyle='#ffe000';ctx.beginPath();ctx.arc(-5.5,-14,6.5,0,6.28);ctx.fill();ctx.beginPath();ctx.arc(5.5,-14,6.5,0,6.28);ctx.fill();ctx.fillStyle='#0a0a00';ctx.beginPath();ctx.arc(-5.5,-14,4,0,6.28);ctx.fill();ctx.beginPath();ctx.arc(5.5,-14,4,0,6.28);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-4,-15.5,1.8,0,6.28);ctx.fill();ctx.beginPath();ctx.arc(7,-15.5,1.8,0,6.28);ctx.fill();ctx.fillStyle='#e09800';ctx.beginPath();ctx.moveTo(-3.5,-8);ctx.lineTo(3.5,-8);ctx.lineTo(0,-3);ctx.closePath();ctx.fill();}
+function dBug(e){var bob=Math.sin(e.af*.8)*2;ctx.fillStyle='#cc0000';ctx.beginPath();ctx.ellipse(0,bob,18,13,0,0,6.28);ctx.fill();ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(0,-9+bob,11,8,0,0,6.28);ctx.fill();ctx.fillStyle='#000';ctx.beginPath();ctx.arc(-7,1+bob,4,0,6.28);ctx.fill();ctx.beginPath();ctx.arc(7,1+bob,4,0,6.28);ctx.fill();ctx.beginPath();ctx.arc(0,5+bob,3,0,6.28);ctx.fill();ctx.strokeStyle='#880000';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-3+bob);ctx.lineTo(0,13+bob);ctx.stroke();ctx.fillStyle='#ff4';ctx.beginPath();ctx.arc(-5,-10+bob,3,0,6.28);ctx.fill();ctx.beginPath();ctx.arc(5,-10+bob,3,0,6.28);ctx.fill();ctx.fillStyle='#000';ctx.beginPath();ctx.arc(-5,-10+bob,1.5,0,6.28);ctx.fill();ctx.beginPath();ctx.arc(5,-10+bob,1.5,0,6.28);ctx.fill();ctx.strokeStyle='#000';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-4,-17+bob);ctx.lineTo(-9,-26+bob);ctx.stroke();ctx.beginPath();ctx.moveTo(4,-17+bob);ctx.lineTo(9,-26+bob);ctx.stroke();ctx.fillStyle='#ff0';ctx.beginPath();ctx.arc(-9,-26+bob,2.5,0,6.28);ctx.fill();ctx.beginPath();ctx.arc(9,-26+bob,2.5,0,6.28);ctx.fill();ctx.strokeStyle='#440000';ctx.lineWidth=2;ctx.lineCap='round';[-10,-2,6].forEach(function(lx){ctx.beginPath();ctx.moveTo(lx-2,8+bob);ctx.lineTo(lx-8,16+bob);ctx.stroke();ctx.beginPath();ctx.moveTo(lx+2,8+bob);ctx.lineTo(lx+8,16+bob);ctx.stroke();});if(G.lvl===2){ctx.globalAlpha=.35;ctx.strokeStyle='#66ee44';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(0,bob,20,15,0,0,6.28);ctx.stroke();ctx.globalAlpha=1;}}
+function dCrab(e){var t=Math.sin(e.af*.7)*2;ctx.fillStyle='#e84020';ctx.beginPath();ctx.ellipse(0,t,20,13,0,0,6.28);ctx.fill();ctx.fillStyle='#ff5a30';ctx.beginPath();ctx.ellipse(0,-2+t,18,10,0,0,6.28);ctx.fill();ctx.fillStyle='#ff5a30';ctx.fillRect(-10,-14+t,4,7);ctx.fillRect(6,-14+t,4,7);ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-8,-16+t,4,0,6.28);ctx.fill();ctx.beginPath();ctx.arc(8,-16+t,4,0,6.28);ctx.fill();ctx.fillStyle='#000';ctx.beginPath();ctx.arc(-8,-16+t,2.2,0,6.28);ctx.fill();ctx.beginPath();ctx.arc(8,-16+t,2.2,0,6.28);ctx.fill();var claw=Math.sin(e.af*.9)*6;ctx.fillStyle='#c03010';ctx.beginPath();ctx.ellipse(-26,-2+t+claw*.3,10,7,.3,0,6.28);ctx.fill();ctx.beginPath();ctx.ellipse(26,-2+t-claw*.3,10,7,-.3,0,6.28);ctx.fill();ctx.strokeStyle='#e84020';ctx.lineWidth=5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-18,0+t);ctx.lineTo(-26,-2+t+claw*.3);ctx.stroke();ctx.beginPath();ctx.moveTo(18,0+t);ctx.lineTo(26,-2+t-claw*.3);ctx.stroke();ctx.strokeStyle='#c03010';ctx.lineWidth=2.5;[-8,-2,4,10].forEach(function(lx){var ls=Math.sin(e.af+lx)*.3;ctx.beginPath();ctx.moveTo(lx,10+t);ctx.lineTo(lx-4,20+t+ls*8);ctx.stroke();});if(G.lvl===2){ctx.globalAlpha=.35;ctx.strokeStyle='#00ffff';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(0,t,22,15,0,0,6.28);ctx.stroke();ctx.globalAlpha=1;}}
+function dWasp(e){var wf=Math.sin(G.frame*.18)*8;ctx.globalAlpha=.65;ctx.fillStyle='#cceeFF';ctx.beginPath();ctx.ellipse(-18,wf,20,8,-.5,0,6.28);ctx.fill();ctx.beginPath();ctx.ellipse(18,wf,20,8,.5,0,6.28);ctx.fill();ctx.globalAlpha=1;ctx.fillStyle='#ffcc00';ctx.beginPath();ctx.ellipse(0,8,10,15,0,0,6.28);ctx.fill();ctx.fillStyle='#1a1a00';ctx.fillRect(-10,2,20,5);ctx.fillRect(-10,12,20,5);ctx.fillRect(-9,18,18,4);ctx.fillStyle='#2a2a00';ctx.beginPath();ctx.ellipse(0,-4,13,11,0,0,6.28);ctx.fill();ctx.fillStyle='#1a1a00';ctx.beginPath();ctx.ellipse(0,-16,10,10,0,0,6.28);ctx.fill();ctx.fillStyle='#ff4400';ctx.beginPath();ctx.arc(-5,-17,4.5,0,6.28);ctx.fill();ctx.beginPath();ctx.arc(5,-17,4.5,0,6.28);ctx.fill();ctx.fillStyle='#000';ctx.beginPath();ctx.arc(-5,-17,2.5,0,6.28);ctx.fill();ctx.beginPath();ctx.arc(5,-17,2.5,0,6.28);ctx.fill();ctx.fillStyle='#333';ctx.beginPath();ctx.moveTo(-3,22);ctx.lineTo(3,22);ctx.lineTo(0,32);ctx.closePath();ctx.fill();ctx.strokeStyle='#222';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-4,-25);ctx.quadraticCurveTo(-12,-34,-18,-30);ctx.stroke();ctx.beginPath();ctx.moveTo(4,-25);ctx.quadraticCurveTo(12,-34,18,-30);ctx.stroke();if(G.lvl===2){ctx.globalAlpha=.4;ctx.strokeStyle='#66ee44';ctx.lineWidth=2.5;ctx.beginPath();ctx.ellipse(0,0,22,20,0,0,6.28);ctx.stroke();ctx.globalAlpha=1;}}
+
+// ── Squid ─────────────────────────────────────────────────
+function drawTrail(){
+  var p=G.player;if(!p)return;
+  var tc=G.lvl===2?'#44dd66':G.lvl===1?'#44ffaa':'#00ffee';
+  for(var i=0;i<p.trail.length;i++){var t=p.trail[i];ctx.globalAlpha=(t.lf/t.mf)*.55;ctx.fillStyle=tc;ctx.beginPath();ctx.arc(t.x,t.y,(t.r||5)*(t.lf/t.mf),0,6.28);ctx.fill();}
+  ctx.globalAlpha=1;
+}
+
+function drawSquid(){
+  var p=G.player;if(!p)return;
+  if(G.inv>0&&Math.floor(G.inv/4)%2===0)return;
+  ctx.save();ctx.translate(p.x+p.w/2,p.y+p.h/2);
+  if(!p.fr)ctx.scale(-1,1);ctx.scale(p.sx2,p.sy);
+  var air=!p.onG,mv=Math.abs(p.vx)>.5;
+  var bodyTop=G.lvl===2?'#ccffcc':G.lvl===1?'#aaffcc':'#ccffff';
+  var bodyMid=G.lvl===2?'#44bb55':G.lvl===1?'#00cc88':'#00bbcc';
+  var bodyBot=G.lvl===2?'#1a5522':G.lvl===1?'#005533':'#004466';
+  var tentA=G.lvl===2?'#44dd66':G.lvl===1?'#00dd99':'#00ccdd';
+  var tentB=G.lvl===2?'#228844':G.lvl===1?'#009966':'#007799';
+  if(p.roll){
+    var rg=ctx.createRadialGradient(0,0,0,0,0,22);
+    rg.addColorStop(0,'#ccffff');rg.addColorStop(.5,'#00ccee');rg.addColorStop(1,'#0044aa');
+    ctx.fillStyle=rg;ctx.beginPath();ctx.arc(0,0,22,0,6.28);ctx.fill();
+    ctx.strokeStyle='rgba(0,200,255,.5)';ctx.lineWidth=2;
+    for(var i=0;i<3;i++){ctx.save();ctx.rotate(G.frame*.3+i*2.094);ctx.beginPath();ctx.arc(0,0,13,0,4.71);ctx.stroke();ctx.restore();}
+  }else{
+    for(var i=0;i<6;i++){
+      var ang=(3.14159/5)*i-1.5708,bx=Math.cos(ang)*11;
+      var wave=Math.sin(p.tp+i*.9+(air?G.frame*.15:0))*(air?10:5.5);
+      var tl=20+Math.sin(p.tp+i)*4;
+      ctx.strokeStyle=i%2===0?tentA:tentB;ctx.lineWidth=5.5-i*.4;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(bx,12);ctx.bezierCurveTo(bx+wave*.5,18,bx-wave+4,22+tl*.4,bx+wave,14+tl);ctx.stroke();
+      ctx.fillStyle='rgba(0,140,200,.6)';ctx.beginPath();ctx.arc(bx+wave,14+tl*.72,2,0,6.28);ctx.fill();
+    }
+    var bH=air?33:mv?27:30,bW=air?20:mv?22:19;
+    var bg=ctx.createLinearGradient(-bW,-bH,bW,12);bg.addColorStop(0,bodyTop);bg.addColorStop(.4,bodyMid);bg.addColorStop(1,bodyBot);
+    ctx.fillStyle=bg;ctx.beginPath();ctx.moveTo(0,-bH);ctx.bezierCurveTo(bW*1.25,-bH*.6,bW,4,0,14);ctx.bezierCurveTo(-bW*1.25,-bH*.6,-bW,4,0,-bH);ctx.closePath();ctx.fill();
+    ctx.fillStyle='rgba(200,255,255,.3)';ctx.beginPath();ctx.ellipse(-4,-bH*.52,bW*.38,bH*.28,-.28,0,6.28);ctx.fill();
+    ctx.fillStyle=G.lvl===2?'#55dd55':G.lvl===1?'#00dd99':'#00ddee';ctx.beginPath();ctx.moveTo(0,-bH);ctx.bezierCurveTo(-9,-bH-22,-16,-bH-10,-8,-bH+4);ctx.bezierCurveTo(-2,-bH-2,0,-bH-7,0,-bH);ctx.fill();
+    var scs=G.lvl===2?['#66ee44','#88ff66','#aaff88']:G.lvl===1?['#44ffaa','#88ffcc','#00ffbb']:['#00ffee','#88ffff','#aaffff'];
+    var spots=[[6,-bH*.34,5],[11,-bH*.6,4],[-5,-bH*.5,3],[-9,-bH*.2,4]];
+    for(var i=0;i<4;i++){ctx.globalAlpha=.7+Math.sin(G.frame*.07+i)*.3;ctx.fillStyle=scs[i%3];ctx.beginPath();ctx.arc(spots[i][0],spots[i][1],spots[i][2],0,6.28);ctx.fill();}
+    ctx.globalAlpha=1;
+    var ey=-bH*.36;
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(-7.5,ey,7,7.5,0,0,6.28);ctx.fill();ctx.beginPath();ctx.ellipse(7.5,ey,7,7.5,0,0,6.28);ctx.fill();
+    var epx=mv?(p.fr?1.8:-1.8):0,epy=air?-1.5:0;
+    ctx.fillStyle='#182858';ctx.beginPath();ctx.ellipse(-7.5+epx,ey+epy,4.2,4.8,0,0,6.28);ctx.fill();ctx.beginPath();ctx.ellipse(7.5+epx,ey+epy,4.2,4.8,0,0,6.28);ctx.fill();
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-5.5+epx,ey+epy-2,2,0,6.28);ctx.fill();ctx.beginPath();ctx.arc(9.5+epx,ey+epy-2,2,0,6.28);ctx.fill();
+    if(!mv&&!air){ctx.globalAlpha=.3;ctx.fillStyle=G.lvl===2?'#aaffaa':G.lvl===1?'#88ffcc':'#aaffee';ctx.beginPath();ctx.ellipse(-12,ey+6,5.5,3.5,.28,0,6.28);ctx.fill();ctx.beginPath();ctx.ellipse(12,ey+6,5.5,3.5,-.28,0,6.28);ctx.fill();ctx.globalAlpha=1;}
+    ctx.fillStyle='#f0c820';ctx.beginPath();ctx.moveTo(-4.5,ey+9);ctx.lineTo(4.5,ey+9);ctx.lineTo(0,ey+14.5);ctx.closePath();ctx.fill();
+    if(G.lvl>=0){
+      ctx.globalAlpha=.12+Math.sin(G.frame*.08)*.1;
+      var _sg=G.lvl===2?'#66ee44':G.lvl===1?'#44ffaa':'#00ffee';
+      ctx.strokeStyle=_sg;ctx.lineWidth=3;
+      ctx.beginPath();ctx.ellipse(0,0,bW+7,bH*.56,0,0,6.28);ctx.stroke();
+      ctx.globalAlpha=1;
+    }
+  }
+  ctx.restore();
+}
+
+function drawParts(){for(var i=0;i<G.parts.length;i++){var p=G.parts[i];ctx.globalAlpha=p.a;ctx.fillStyle=p.col;ctx.beginPath();ctx.arc(p.x-G.sx,p.y,p.r,0,6.28);ctx.fill();}ctx.globalAlpha=1;}
+
+// ── HUD ───────────────────────────────────────────────────
+function updateHUD(){
+  if(G.lvl===3){efUpdateHUD();return;}
+  document.getElementById('hl').textContent='💜 '+G.lives;
+  document.getElementById('hs').textContent='⭐ '+G.score;
+  var names=['CYAN PALM CIRCUIT','EMERALD FOREST','GREEN HILL ZONE'];
+  document.getElementById('hv').textContent=names[G.lvl]||'';
+}
+
+function showOv(type){
+  var ov=document.getElementById('overlay');ov.style.display='flex';
+  var btns='<div class="btns"><button class="btn bsv" onclick="startGame(0)">🌴 Cyan Palm</button><button class="btn bfo" onclick="startGame(1)">🌿 Emerald</button><button class="btn bgh" onclick="startGame(2)">🌿 GH Zone</button><button class="btn bgf" onclick="startGame(3)">♾️ Forever</button></div>';
+  if(type==='win'){
+    var msgs=['Cyan Palm Circuit complete! 🌴','Emerald Forest explored! 🌿','Green Hill Zone cleared! ✨'];
+    var summaries=[
+      '✨ Split routes · 🕳️ Secret cave · 👆 High road',
+      '🌿 Vine swings · 🌳 Hidden passage · ⬆️ Vertical route',
+      '⚡ Speed chains · 🏁 Long slopes · 🎯 Route mastery'
+    ];
+    var nexttip=[
+      '🌿 Try Emerald Forest — grab vines &amp; find hidden passages!\n♾️ Or go Endless in Green Hill Forever!',
+      '⚡ Try Green Hill Zone — master the long speed chains!',
+      '🌴 Replay Cyan Palm Circuit for a better score!'
+    ];
+    ov.innerHTML='<div style="font-size:58px;filter:drop-shadow(0 0 18px #ff0)">🏆</div>'
+      +'<h1 style="text-shadow:0 0 28px #ff0;color:#ffe;font:bold 40px Georgia,serif;margin:4px 0">Level Clear!</h1>'
+      +'<div style="font-size:20px;color:#fa0;margin-bottom:4px">Score: '+G.score+'</div>'
+      +'<div style="font-size:13px;color:#aaa;margin-bottom:3px">'+msgs[G.lvl]+'</div>'
+      +'<div style="font-size:12px;color:#88ffcc;margin-bottom:6px">'+summaries[G.lvl]+'</div>'
+      +'<div style="font-size:12px;color:#aacfff;margin-bottom:10px;font-style:italic">'+nexttip[G.lvl]+'</div>'
+      +btns;
+  }else{
+    ov.innerHTML='<div style="font-size:62px">💀</div><h1 style="text-shadow:0 0 28px #f44;color:#fcc;font:bold 44px Georgia,serif;margin:6px 0">Game Over</h1><div style="font-size:19px;color:#f88;margin-bottom:10px">Score: '+G.score+'</div>'+btns;
+  }
+}
+
+function startGame(lvl){
+  document.getElementById('overlay').style.display='none';
+  G.state='playing';G.lvl=lvl;G.score=0;G.lives=3;G.frame=0;G.sx=0;
+  G.parts=[];G.inv=0;G.jHeld=false;G.rHeld=false;G.combo=0;G.comboTimer=0;
+  G.vines=[];G.fogs=[];G.vine=null;G.tut={};G.secrets=[];
+  document.getElementById('hcombo').style.opacity='0';
+  document.getElementById('hpopup').style.opacity='0';
+  // HUD swap: forever uses fhud, others use normal hud
+  document.getElementById('hud').style.display=(lvl===3)?'none':'flex';
+  document.getElementById('fhud').style.display=(lvl===3)?'flex':'none';
+  rebuildLevel();spawnPlayer();
+  if(lvl===3)efUpdateHUD();else updateHUD();
+}
+
+var lastT=0;
+function loop(ts){
+  G.frame++;var dt=ts-lastT;lastT=ts;
+  if(dt<150){update();render();}
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
